@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="january_short">J</string>
+    <string name="february_short">F</string>
+    <string name="april_short">A</string>
+    <string name="june_short">J</string>
+    <string name="july_short">J</string>
+    <string name="august_short">A</string>
+    <string name="september_short">S</string>
+    <string name="november_short">N</string>
+    <string name="december_short">D</string>
+    <string name="march_short">M</string>
+    <string name="may_short">M</string>
+    <string name="october_short">O</string>
+    <string name="add_category">Kategorie hinzufügen</string>
+    <string name="new_entry">Neuer Eintrag</string>
+    <string name="date">Datum</string>
+    <string name="category">Kategorie</string>
+    <string name="new_category">Neue Kategorie</string>
+    <string name="color">Farbe</string>
+    <string name="name_already_in_use">Name bereits in Benutzung</string>
+    <string name="create_pixlist_and_category_first_desc">Erstelle zunächst eine PixListe und mindestens eine Kategorie.</string>
+</resources>

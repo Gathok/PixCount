@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name" translatable="false">PixCount</string>
+    <string name="january_short">J</string>
+    <string name="february_short">F</string>
+    <string name="march_short">M</string>
+    <string name="april_short">A</string>
+    <string name="may_short">M</string>
+    <string name="june_short">J</string>
+    <string name="july_short">J</string>
+    <string name="september_short">S</string>
+    <string name="october_short">O</string>
+    <string name="november_short">N</string>
+    <string name="december_short">D</string>
+    <string name="august_short">A</string>
+    <string name="add_category">Add Category</string>
+    <string name="new_entry">New Entry</string>
+    <string name="date">Date</string>
+    <string name="category">Category</string>
+    <string name="new_category">New Category</string>
+    <string name="color">Color</string>
+    <string name="name_already_in_use">Name already in use</string>
+    <string name="create_pixlist_and_category_first_desc">Please create a PixList and at least one Category first.</string>
+</resources>
