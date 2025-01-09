@@ -6,7 +6,6 @@ import FilledBoxIcon
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,31 +18,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.EditCalendar
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.AddBox
 import androidx.compose.material.icons.outlined.LibraryAdd
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CalendarLocale
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +40,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -63,7 +50,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -84,6 +70,8 @@ import androidx.compose.ui.window.DialogProperties
 import de.gathok.pixcount.dbObjects.PixCategory
 import de.gathok.pixcount.dbObjects.PixColor
 import de.gathok.pixcount.dbObjects.PixList
+import de.gathok.pixcount.ui.customDialogs.Dropdown
+import de.gathok.pixcount.ui.customDialogs.EntryDialog
 import de.gathok.pixcount.ui.customIcons.FilledPixListIcon
 import de.gathok.pixcount.ui.customIcons.OutlinedPixListIcon
 import de.gathok.pixcount.ui.theme.PixCountTheme
@@ -91,8 +79,10 @@ import de.gathok.pixcount.util.Months
 import io.realm.kotlin.internal.platform.currentTime
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 @Composable
 fun MainScreen(
@@ -103,7 +93,9 @@ fun MainScreen(
     val state by viewModel.state.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    var showNewEntryDialog by remember { mutableStateOf(false) }
+    var showEntryDialog by remember { mutableStateOf(false) }
+    var entryToEdit by remember { mutableStateOf<Long?>(null) }
+    var curEntryCategory by remember { mutableStateOf<PixCategory?>(null) }
 
     var showNewCategoryDialog by remember { mutableStateOf(false) }
 
@@ -112,14 +104,25 @@ fun MainScreen(
     var showDeleteListDialog by remember { mutableStateOf(false) }
     var listToDelete by remember { mutableStateOf<PixList?>(null) }
 
-    if (showNewEntryDialog) {
-        NewEntryDialog(
+    if (showEntryDialog) {
+        val startDate: Long? = entryToEdit
+        val curCategory: PixCategory? = curEntryCategory
+        if (startDate != null) {
+            entryToEdit = null
+        }
+        if (curCategory != null) {
+            curEntryCategory = null
+        }
+        EntryDialog(
             categories = state.curCategories,
-            onDismiss = { showNewEntryDialog = false },
-            onAdd = { day, month, category ->
+            onDismiss = { showEntryDialog = false },
+            onEdit = { day, month, category ->
                 viewModel.createPixEntry(day, month, category, state.curPixList!!.id)
-                showNewEntryDialog = false
-            }
+                showEntryDialog = false
+            },
+            startDate = startDate
+                ?: (currentTime().epochSeconds * 1000 + currentTime().nanosecondsOfSecond / 1_000_000),
+            curCategory = curCategory ?: state.curCategories.first()
         )
     }
 
@@ -268,7 +271,7 @@ fun MainScreen(
                             IconButton(
                                 onClick = {
                                     if (state.curPixList != null  && state.curCategories.isNotEmpty()) {
-                                        showNewEntryDialog = true
+                                        showEntryDialog = true
                                     } else {
                                         Toast.makeText(
                                             context,
@@ -386,21 +389,40 @@ fun MainScreen(
                                                                 day,
                                                                 month
                                                             ).let { pixCategory ->
-                                                                if (pixCategory == null) { // TODO: This is just a placeholder
-                                                                    throw IllegalArgumentException("Entries might be null")
-                                                                }
-                                                                else if (!pixCategory.color!!.isPlaceholder) {
-                                                                    Icon(
-                                                                        imageVector = FilledBoxIcon,
-                                                                        contentDescription = "Pix",
-                                                                        tint = pixCategory.color!!.toColor(),
-                                                                    )
-                                                                } else {
-                                                                    Icon(
-                                                                        imageVector = Icons.Default.CheckBoxOutlineBlank,
-                                                                        contentDescription = "Empty Pix",
-                                                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                                                    )
+                                                                IconButton(
+                                                                    onClick = {
+                                                                        if (state.curCategories.isNotEmpty()) {
+                                                                            entryToEdit = getDateAsLong(day, month.getIndex)
+                                                                            curEntryCategory = pixCategory
+                                                                            showEntryDialog = true
+                                                                        } else {
+                                                                            Toast.makeText(
+                                                                                context,
+                                                                                context.getString(R.string.create_category_first_desc),
+                                                                                Toast.LENGTH_SHORT
+                                                                            ).show()
+                                                                        }
+                                                                    }
+                                                                ) {
+                                                                    if (pixCategory == null) { // TODO: This is just a placeholder
+                                                                        throw IllegalArgumentException(
+                                                                            "Entries might be null"
+                                                                        )
+                                                                    } else if (!pixCategory.color!!.isPlaceholder) {
+                                                                        Icon(
+                                                                            imageVector = FilledBoxIcon,
+                                                                            contentDescription = "Pix",
+                                                                            tint = pixCategory.color!!.toColor(),
+                                                                        )
+                                                                    } else {
+                                                                        Icon(
+                                                                            imageVector = Icons.Default.CheckBoxOutlineBlank,
+                                                                            contentDescription = "Empty Pix",
+                                                                            tint = MaterialTheme.colorScheme.onSurface.copy(
+                                                                                alpha = 0.5f
+                                                                            ),
+                                                                        )
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -496,268 +518,21 @@ fun MainScreen(
     }
 }
 
-// NewEntryDialog ----------------------------------------------------------------
-@Composable
-fun NewEntryDialog(
-    categories: List<PixCategory>,
-    onDismiss: () -> Unit,
-    onAdd: (Int, Months, PixCategory) -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        )
-    ) {
-
-        val showDatePickerDialog = remember { mutableStateOf(false) }
-        val dateStatePicker by remember {
-            mutableStateOf(DatePickerState(
-                locale = CalendarLocale("de"),
-                initialSelectedDateMillis =
-                    currentTime().epochSeconds * 1000 + currentTime().nanosecondsOfSecond / 1_000_000,
-            ))
-        }
-        var oldDateValue by remember { mutableLongStateOf(dateStatePicker.selectedDateMillis!!) }
-
-        LaunchedEffect(showDatePickerDialog.value) {
-            if (showDatePickerDialog.value) {
-                oldDateValue = dateStatePicker.selectedDateMillis!!
-            }
-        }
-
-        if (showDatePickerDialog.value) {
-            DatePickerDialog(
-                onDismissRequest = { showDatePickerDialog.value = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showDatePickerDialog.value = false
-                        }
-                    ) {
-                        Text("OK")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showDatePickerDialog.value = false
-                            dateStatePicker.selectedDateMillis = oldDateValue
-                        }
-                    ) {
-                        Text("Cancel")
-                    }
-                },
-            ) {
-                DatePicker(
-                    state = dateStatePicker
-                )
-            }
-        }
-
-        var selectedCategory by remember { mutableStateOf(categories.first()) }
-
-        Box (
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            Column (
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Close",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.clickable { onDismiss() }
-                    )
-                    Text(
-                        stringResource(R.string.new_entry),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Add",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable {
-                            val selectedDate = formatTimestamp(dateStatePicker.selectedDateMillis!!)
-                            val day = selectedDate.substring(0, 2).toInt()
-                            val month = Months.getByIndex(selectedDate.substring(3, 5).toInt())
-                            onAdd(day, month, selectedCategory)
-                        }
-                    )
-                }
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column (
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDatePickerDialog.value = true },
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        OutlinedText(
-                            value = formatTimestamp(dateStatePicker.selectedDateMillis!!),
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.EditCalendar,
-                                    contentDescription = "Edit Date",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
-                        )
-                    }
-                }
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Dropdown(
-                        modifier = Modifier.fillMaxWidth(),
-                        options = categories.associateBy({ it }, { it.name }),
-                        label = stringResource(R.string.category),
-                        onValueChanged = { selectedCategory = it as PixCategory },
-                        selectedOption = Pair(selectedCategory, selectedCategory.name)
-                    )
-                }
-            }
-        }
-
-    }
+fun getDateAsLong(
+    day: Int,
+    month: Int,
+    year: Int = ZonedDateTime.ofInstant(
+        Instant.ofEpochMilli(currentTime().epochSeconds * 1000 + currentTime().nanosecondsOfSecond / 1_000_000),
+        ZoneId.systemDefault()
+    ).year
+): Long {
+    return LocalDate.of(year, month, day)
+        .atStartOfDay(ZoneOffset.UTC) // Start of day in the system's default timezone
+        .toInstant()
+        .toEpochMilli()
 }
 
-@Composable
-fun OutlinedText(
-    value: String,
-    modifier: Modifier = Modifier,
-    trailingIcon: @Composable (() -> Unit)? = null,
-) {
-    val scrollState = rememberScrollState()
-    Surface(
-        modifier = modifier
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                shape = MaterialTheme.shapes.extraSmall
-            )
-            .padding(16.dp)
-    ) {
-        Row (
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = value,
-                modifier = Modifier.verticalScroll(scrollState)
-            )
-            if (trailingIcon != null) {
-                trailingIcon()
-            }
-        }
 
-    }
-}
-
-fun formatTimestamp(timestamp: Long): String {
-    val formatter = DateTimeFormatter
-        .ofPattern("dd.MM.yyyy")
-        .withZone(ZoneId.systemDefault()) // Set the time zone, e.g., your local time zone
-    return formatter.format(Instant.ofEpochMilli(timestamp))
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Dropdown(
-    modifier: Modifier,
-    options: Map<Any, String>,
-    onValueChanged: (Any) -> Unit,
-    label: String,
-    selectedOption: Pair<Any, String>,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var currentInput by remember { mutableStateOf(selectedOption.second) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = {
-            expanded = !expanded
-            if (expanded)
-                currentInput = ""
-        },
-        modifier = modifier
-    ) {
-        OutlinedTextField(
-            readOnly = !expanded,
-            value = if (expanded) currentInput else selectedOption.second,
-            onValueChange = {
-                currentInput = it
-            },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-            label = { Text(label) },
-            colors = OutlinedTextFieldDefaults.colors(),
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth(),
-            singleLine = true,
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.toList().forEach { pair ->
-                val (option, text) = pair
-                if (text.contains(currentInput, ignoreCase = true)) {
-                    DropdownMenuItem(
-                        text = { Text(text = text) },
-                        onClick = {
-                            expanded = false
-                            currentInput = text
-                            onValueChanged(option)
-                        }
-                    )
-                }
-            }
-        }
-    }
-
-}
-
-@Preview
-@Composable
-private fun NewEntryDialogPreview() {
-    PixCountTheme (
-        darkTheme = true
-    ) {
-        NewEntryDialog(
-            categories = listOf(
-                PixCategory("Category 1", PixColor("Color 1", 1f, 0f, 0f, 1f)),
-                PixCategory("Category 2", PixColor("Color 2", 0f, 1f, 0f, 1f)),
-                PixCategory("Category 3", PixColor("Color 3", 0f, 0f, 1f, 1f)),
-            ),
-            onDismiss = { },
-            onAdd = { _, _, _ -> }
-        )
-    }
-}
 
 // NewCategoryDialog ----------------------------------------------------------------
 @Composable

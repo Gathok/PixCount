@@ -77,7 +77,7 @@ class MainViewModel: ViewModel() {
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
+        started = SharingStarted.WhileSubscribed(5000),
         initialValue = MainState()
     )
 
@@ -158,7 +158,7 @@ class MainViewModel: ViewModel() {
     }
 
     // PixEntry functions ---------------------------------------------------
-    fun createPixEntry(day: Int, month: Months, category: PixCategory, pixListId: BsonObjectId) {
+    fun createPixEntry(day: Int, month: Months, category: PixCategory?, pixListId: BsonObjectId) {
         var pixList: PixList? = null
         for (pList in _allPixLists.value) {
             if (pList.id == pixListId) {
@@ -171,7 +171,9 @@ class MainViewModel: ViewModel() {
         }
         viewModelScope.launch {
             realm.write {
-                val managedCategory = findLatest(category) ?: throw IllegalArgumentException("category is invalid or outdated")
+                val managedCategory = if (category == null) PixCategory()
+                    else findLatest(category) ?: throw IllegalArgumentException("category is invalid or outdated")
+
                 val managedPixList = findLatest(pixList) ?: throw IllegalArgumentException("pixList is invalid or outdated")
                 managedPixList.entries?.setEntry(day, month, managedCategory)
 

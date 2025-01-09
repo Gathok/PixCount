@@ -20,4 +20,6 @@
     <string name="color">Farbe</string>
     <string name="name_already_in_use">Name bereits in Benutzung</string>
     <string name="create_pixlist_and_category_first_desc">Erstelle zunächst eine PixListe und mindestens eine Kategorie.</string>
+    <string name="new_pixlist">Neue PixListe</string>
+    <string name="create_category_first_desc">Erstelle zunächst mindestens eine Kategorie.</string>
 </resources>
