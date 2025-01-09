@@ -15,6 +15,15 @@ class PixColor(): RealmObject {
     private var alpha: Float = 0f
     var isPlaceholder: Boolean = true
 
+    constructor(name: String, color: Color, isPlaceholder: Boolean = false) : this() {
+        this.name = name
+        this.red = color.red
+        this.green = color.green
+        this.blue = color.blue
+        this.alpha = color.alpha
+        this.isPlaceholder = isPlaceholder
+    }
+
     constructor(name: String, red: Float, green: Float, blue: Float, alpha: Float, isPlaceholder: Boolean = false) : this() {
         this.name = name
         this.red = red

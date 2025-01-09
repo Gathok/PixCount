@@ -5,6 +5,16 @@ import androidx.lifecycle.viewModelScope
 import de.gathok.pixcount.dbObjects.PixCategory
 import de.gathok.pixcount.dbObjects.PixColor
 import de.gathok.pixcount.dbObjects.PixList
+import de.gathok.pixcount.ui.theme.BabyBlue
+import de.gathok.pixcount.ui.theme.BlushPink
+import de.gathok.pixcount.ui.theme.DustyPink
+import de.gathok.pixcount.ui.theme.Lavender
+import de.gathok.pixcount.ui.theme.LemonYellow
+import de.gathok.pixcount.ui.theme.MintGreen
+import de.gathok.pixcount.ui.theme.PaleOrange
+import de.gathok.pixcount.ui.theme.PastelLilac
+import de.gathok.pixcount.ui.theme.Peach
+import de.gathok.pixcount.ui.theme.SkyBlue
 import de.gathok.pixcount.util.Months
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
@@ -45,16 +55,16 @@ class MainViewModel: ViewModel() {
 //        )
 
     private val _colorList = listOf(
-        PixColor(name = "Peach", red = 1.0f, green = 0.87f, blue = 0.77f, alpha = 1.0f),
-        PixColor(name = "Lemon Yellow", red = 1.0f, green = 0.97f, blue = 0.69f, alpha = 1.0f),
-        PixColor(name = "Mint Green", red = 0.74f, green = 0.98f, blue = 0.79f, alpha = 1.0f),
-        PixColor(name = "Sky Blue", red = 0.68f, green = 0.85f, blue = 0.90f, alpha = 1.0f),
-        PixColor(name = "Lavender", red = 0.82f, green = 0.75f, blue = 0.93f, alpha = 1.0f),
-        PixColor(name = "Dusty Pink", red = 0.91f, green = 0.75f, blue = 0.80f, alpha = 1.0f),
-        PixColor(name = "Pale Orange", red = 1.0f, green = 0.85f, blue = 0.72f, alpha = 1.0f),
-        PixColor(name = "Baby Blue", red = 0.68f, green = 0.90f, blue = 1.0f, alpha = 1.0f),
-        PixColor(name = "Blush Pink", red = 1.0f, green = 0.82f, blue = 0.86f, alpha = 1.0f),
-        PixColor(name = "Lilac", red = 0.91f, green = 0.78f, blue = 0.94f, alpha = 1.0f)
+        PixColor(name = "Peach", Peach),
+        PixColor(name = "Lemon Yellow", LemonYellow),
+        PixColor(name = "Mint Green", MintGreen),
+        PixColor(name = "Sky Blue", SkyBlue),
+        PixColor(name = "Lavender", Lavender),
+        PixColor(name = "Dusty Pink", DustyPink),
+        PixColor(name = "Pale Orange", PaleOrange),
+        PixColor(name = "Baby Blue", BabyBlue),
+        PixColor(name = "Blush Pink", BlushPink),
+        PixColor(name = "Lilac", PastelLilac),
     )
 
     private val _state = MutableStateFlow(MainState())

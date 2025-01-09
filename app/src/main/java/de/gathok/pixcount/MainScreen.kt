@@ -4,6 +4,7 @@ package de.gathok.pixcount
 
 import FilledBoxIcon
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -56,6 +57,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,7 +71,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -292,12 +297,26 @@ fun MainScreen(
                                     }
                                 }
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = "Menu"
-                                )
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    contentColor = MaterialTheme.colorScheme.onSurface,
+                                ) {
+                                    Image (
+                                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                                        contentDescription = "Menu",
+                                        contentScale = ContentScale.Fit,
+                                        modifier = Modifier
+                                            .scale(1.5f)
+                                    )
+                                }
                             }
-                        }
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors().copy(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                        ),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(24.dp))
                     )
                 }
             ) { pad ->
@@ -404,7 +423,7 @@ fun MainScreen(
                             LazyColumn (
                                 modifier = Modifier
                                     .weight(0.2f)
-                                    .padding(start = 4.dp)
+                                    .padding(start = 4.dp, top = 8.dp)
                                     .fillMaxSize(),
                             ) {
                                 items(state.curCategories) { curCategory ->
@@ -1002,7 +1021,24 @@ private fun NewListDialogPreview() {
 @Preview
 @Composable
 private fun Preview() {
-
+    PixCountTheme (
+        darkTheme = true
+    ) {
+        Surface (
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
+        ) {
+            Image(
+                painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                contentDescription = "Menu",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .scale(1.5f)
+            )
+        }
+    }
 }
 
 //@Preview
