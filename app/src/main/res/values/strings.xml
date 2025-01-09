@@ -20,4 +20,5 @@
     <string name="color">Color</string>
     <string name="name_already_in_use">Name already in use</string>
     <string name="create_pixlist_and_category_first_desc">Please create a PixList and at least one Category first.</string>
+    <string name="new_pixlist">New PixList</string>
 </resources>

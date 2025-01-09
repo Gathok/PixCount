@@ -57,31 +57,12 @@ class MainViewModel: ViewModel() {
         PixColor(name = "Lilac", red = 0.91f, green = 0.78f, blue = 0.94f, alpha = 1.0f)
     )
 
-    // FIXME: Delete this
-    private val _testList = PixList("Test List")
-
     private val _state = MutableStateFlow(MainState())
     val state = combine(_state, _allPixLists) { state, allPixLists ->
-        if (allPixLists.isEmpty()) {
-            viewModelScope.launch {
-                realm.write {
-                    copyToRealm(_testList)
-                }
-            }
-        }
-//        // FIXME Delete this
-//        viewModelScope.launch {
-//            realm.write {
-//                val managedList = findLatest(allPixLists.first()) ?: throw IllegalArgumentException("Test list is invalid or outdated")
-//                managedList.entries = PixListValues()
-//                copyToRealm(managedList, UpdatePolicy.ALL)
-//            }
-//        }
-
         state.copy(
             allPixLists = allPixLists,
-            curPixList = allPixLists.firstOrNull(), // FIXME: This is just a placeholder
-            curCategories = allPixLists.firstOrNull()?.categories?.toList() ?: emptyList(),
+            curPixList = allPixLists.find { it.id == state.curPixList?.id },
+            curCategories = allPixLists.find { it.id == state.curPixList?.id }.let { it?.categories?.toList() ?: emptyList() },
             colorList = _colorList // TODO: Add .value when custom color query is implemented
         )
     }.stateIn(
@@ -90,8 +71,9 @@ class MainViewModel: ViewModel() {
         initialValue = MainState()
     )
 
-    fun createPixList(name: String): BsonObjectId {
-        var pixList: PixList = PixList()
+    // PixList functions -----------------------------------------------------
+    fun createPixList(name: String): PixList {
+        val pixList = PixList()
         viewModelScope.launch {
             realm.write {
                 pixList.name = name
@@ -99,9 +81,23 @@ class MainViewModel: ViewModel() {
                 copyToRealm(pixList)
             }
         }
-        return pixList.id
+        return pixList
     }
 
+    fun setCurPixList(pixList: PixList) {
+        _state.value = _state.value.copy(curPixList = pixList)
+    }
+
+    fun deletePixList(pixList: PixList) {
+        viewModelScope.launch {
+            realm.write {
+                val managedPixList = findLatest(pixList) ?: throw IllegalArgumentException("pixList is invalid or outdated")
+                delete(managedPixList)
+            }
+        }
+    }
+
+    // PixCategory functions -------------------------------------------------
     fun createPixCategory(name: String, color: PixColor, pixListId: BsonObjectId) {
         var pixList: PixList? = null
         for (pList in _allPixLists.value) {
@@ -151,6 +147,7 @@ class MainViewModel: ViewModel() {
         }
     }
 
+    // PixEntry functions ---------------------------------------------------
     fun createPixEntry(day: Int, month: Months, category: PixCategory, pixListId: BsonObjectId) {
         var pixList: PixList? = null
         for (pList in _allPixLists.value) {
