@@ -26,4 +26,5 @@
     <string name="name">Name</string>
     <string name="edit_category">Kategorie bearbeiten</string>
     <string name="no_pixlist_selected">Keine PixListe ausgewählt.</string>
+    <string name="delete_list_desc">Die Liste \'%1$s\' löschen?</string>
 </resources>

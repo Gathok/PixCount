@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.AddBox
 import androidx.compose.material.icons.outlined.LibraryAdd
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,8 +70,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.gathok.pixcount.db.PixCategory
 import de.gathok.pixcount.db.PixList
-import de.gathok.pixcount.ui.customDialogs.EntryDialog
 import de.gathok.pixcount.ui.customDialogs.CategoryDialog
+import de.gathok.pixcount.ui.customDialogs.CustomDialog
+import de.gathok.pixcount.ui.customDialogs.EntryDialog
 import de.gathok.pixcount.ui.customIcons.FilledPixListIcon
 import de.gathok.pixcount.ui.customIcons.OutlinedPixListIcon
 import de.gathok.pixcount.ui.theme.PixCountTheme
@@ -185,34 +185,51 @@ fun MainScreen(
     }
 
     if (showDeleteListDialog && listToDelete != null) {
-        AlertDialog(
+        CustomDialog(
             onDismissRequest = { showDeleteListDialog = false },
             title = {
-                Text("Delete PixList")
+                Text(
+                    text = "Delete PixList",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             },
-            text = {
-                Text("Do you really want to delete ${listToDelete?.name}?")
+            leftIcon = {
+                IconButton (
+                    onClick = {
+                        showDeleteListDialog = false
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             },
-            confirmButton = {
+            rightIcon = {
                 TextButton(
                     onClick = {
                         viewModel.deletePixList(listToDelete!!)
                         showDeleteListDialog = false
                     }
                 ) {
-                    Text("Yes")
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Yes",
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteListDialog = false
-                    }
-                ) {
-                    Text("No")
-                }
-            }
-        )
+        ) {
+            Text(
+                text = stringResource(R.string.delete_list_desc, listToDelete!!.name),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .padding(top = 16.dp)
+            )
+        }
     }
 
     LaunchedEffect(state.curPixList) {
