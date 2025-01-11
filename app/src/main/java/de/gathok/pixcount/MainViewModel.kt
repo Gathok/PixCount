@@ -2,9 +2,9 @@ package de.gathok.pixcount
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.gathok.pixcount.dbObjects.PixCategory
-import de.gathok.pixcount.dbObjects.PixColor
-import de.gathok.pixcount.dbObjects.PixList
+import de.gathok.pixcount.db.PixCategory
+import de.gathok.pixcount.db.PixColor
+import de.gathok.pixcount.db.PixList
 import de.gathok.pixcount.ui.theme.BabyBlue
 import de.gathok.pixcount.ui.theme.BlushPink
 import de.gathok.pixcount.ui.theme.DustyPink
@@ -121,12 +121,39 @@ class MainViewModel: ViewModel() {
         }
         viewModelScope.launch {
             realm.write {
-                val pixCategory = PixCategory(name, color)
+                val newCategory = PixCategory(name = name, color = color)
                 val managedPixList = findLatest(pixList) ?: throw IllegalArgumentException("pixList is invalid or outdated")
-                if (!managedPixList.categories.add(pixCategory)) {
+                if (!managedPixList.categories.add(newCategory)) {
                     throw IllegalArgumentException("Category already exists")
                 }
                 copyToRealm(managedPixList, UpdatePolicy.ALL)
+            }
+        }
+    }
+
+    fun updatePixCategory(category: PixCategory, newName: String?, newColor: PixColor?, pixListId: BsonObjectId) {
+        var pixList: PixList? = null
+        for (pList in _allPixLists.value) {
+            if (pList.id == pixListId) {
+                pixList = pList
+                break
+            }
+        }
+        if (pixList == null) {
+            throw IllegalArgumentException("pixListId is invalid")
+        }
+        viewModelScope.launch {
+            realm.write {
+                val managedCategory = findLatest(category)
+                    ?: throw IllegalArgumentException("category is invalid or outdated")
+                if (newName != null) {
+                    managedCategory.name = newName
+                }
+                if (newColor != null) {
+                    managedCategory.color = copyToRealm(newColor, UpdatePolicy.ALL)
+                }
+
+                copyToRealm(managedCategory, UpdatePolicy.ALL)
             }
         }
     }

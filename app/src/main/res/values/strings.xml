@@ -22,4 +22,8 @@
     <string name="create_pixlist_and_category_first_desc">Create a PixList and at least one Category first.</string>
     <string name="new_pixlist">New PixList</string>
     <string name="create_category_first_desc">Create at least one category first.</string>
+    <string name="version_desc">Version: %1$s</string>
+    <string name="name">Name</string>
+    <string name="edit_category">Edit Category</string>
+    <string name="no_pixlist_selected">No PixList selected.</string>
 </resources>

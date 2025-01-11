@@ -3,6 +3,8 @@
 package de.gathok.pixcount
 
 import FilledBoxIcon
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -67,11 +69,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import de.gathok.pixcount.dbObjects.PixCategory
-import de.gathok.pixcount.dbObjects.PixColor
-import de.gathok.pixcount.dbObjects.PixList
-import de.gathok.pixcount.ui.customDialogs.Dropdown
+import de.gathok.pixcount.db.PixCategory
+import de.gathok.pixcount.db.PixList
 import de.gathok.pixcount.ui.customDialogs.EntryDialog
+import de.gathok.pixcount.ui.customDialogs.CategoryDialog
 import de.gathok.pixcount.ui.customIcons.FilledPixListIcon
 import de.gathok.pixcount.ui.customIcons.OutlinedPixListIcon
 import de.gathok.pixcount.ui.theme.PixCountTheme
@@ -93,11 +94,21 @@ fun MainScreen(
     val state by viewModel.state.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
+    var versionName: String?
+    try {
+        val pInfo: PackageInfo =
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        versionName = pInfo.versionName
+    } catch (e: PackageManager.NameNotFoundException) {
+        versionName = null
+    }
+
     var showEntryDialog by remember { mutableStateOf(false) }
     var entryToEdit by remember { mutableStateOf<Long?>(null) }
     var curEntryCategory by remember { mutableStateOf<PixCategory?>(null) }
 
-    var showNewCategoryDialog by remember { mutableStateOf(false) }
+    var showCategoryDialog by remember { mutableStateOf(false) }
+    var categoryToEdit by remember { mutableStateOf<PixCategory?>(null) }
 
     var showNewListDialog by remember { mutableStateOf(false) }
 
@@ -126,15 +137,38 @@ fun MainScreen(
         )
     }
 
-    if (showNewCategoryDialog) {
-        NewCategoryDialog(
-            onDismiss = { showNewCategoryDialog = false },
-            onAdd = { name, color ->
-                viewModel.createPixCategory(name.trim(), color, state.curPixList!!.id)
-                showNewCategoryDialog = false
+    if (showCategoryDialog) {
+        CategoryDialog(
+            onDismiss = {
+                showCategoryDialog = false
+                categoryToEdit = null
+            },
+            onAdd = { name, color, isEdit ->
+                if (isEdit) {
+                    viewModel.updatePixCategory(
+                        categoryToEdit!!,
+                        name,
+                        color,
+                        state.curPixList!!.id
+                    )
+                } else {
+                    viewModel.createPixCategory(name!!, color!!, state.curPixList!!.id)
+                }
+                showCategoryDialog = false
+                categoryToEdit = null
+            },
+            onDelete = {
+                viewModel.deleteCategory(
+                    categoryToEdit!!,
+                    state.curPixList!!.id
+                )
+                showCategoryDialog = false
+                categoryToEdit = null
             },
             colors = state.colorList,
             invalidNames = state.curCategories.map { it.name },
+            isEdit = categoryToEdit != null,
+            categoryToEdit = categoryToEdit,
         )
     }
 
@@ -254,6 +288,17 @@ fun MainScreen(
                             )
                         }
                     )
+                    if (versionName != null) {
+                        Text(
+                            text = stringResource(R.string.version_desc, versionName),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         ) {
@@ -319,7 +364,7 @@ fun MainScreen(
                             containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                         ),
                         modifier = Modifier
-                            .clip(RoundedCornerShape(24.dp))
+                            .clip(RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 16.dp, bottomEnd = 16.dp))
                     )
                 }
             ) { pad ->
@@ -352,8 +397,7 @@ fun MainScreen(
                                                         horizontalArrangement = Arrangement.End,
                                                         verticalAlignment = Alignment.CenterVertically,
                                                     ) {
-                                                        var text: String? = null
-                                                        text = if (j == 0) {
+                                                        val text = if (j == 0) {
                                                             null
                                                         } else if (j < 10) {
                                                             "0$j"
@@ -452,10 +496,8 @@ fun MainScreen(
                                     Row (
                                         modifier = Modifier
                                             .clickable {
-                                                viewModel.deleteCategory(
-                                                    curCategory,
-                                                    state.curPixList!!.id
-                                                )
+                                                categoryToEdit = curCategory
+                                                showCategoryDialog = true
                                             }
                                             .fillMaxWidth(),
                                     ) {
@@ -491,7 +533,7 @@ fun MainScreen(
                                     ) {
                                         IconButton(
                                             onClick = {
-                                                showNewCategoryDialog = true
+                                                showCategoryDialog = true
                                             }
                                         ) {
                                             Icon(
@@ -509,7 +551,7 @@ fun MainScreen(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("No Pix Lists")
+                            Text(stringResource(R.string.no_pixlist_selected))
                         }
                     }
                 }
@@ -532,156 +574,6 @@ fun getDateAsLong(
         .toEpochMilli()
 }
 
-
-
-// NewCategoryDialog ----------------------------------------------------------------
-@Composable
-fun NewCategoryDialog(
-    onDismiss: () -> Unit,
-    onAdd: (String, PixColor) -> Unit,
-    colors: List<PixColor> = emptyList(),
-    invalidNames: List<String> = emptyList()
-) {
-    var name by remember { mutableStateOf("") }
-    var color by remember { mutableStateOf(colors.firstOrNull() ?: PixColor()) }
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        )
-    ) {
-        Box (
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            Column (
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Close",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.clickable { onDismiss() }
-                    )
-                    Text(
-                        stringResource(R.string.new_category),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Add",
-                        tint = if (name.isNotBlank() && !color.isPlaceholder && !invalidNames.contains(name.trim())) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        },
-                        modifier = Modifier
-                            .clickable {
-                                if (name.isNotBlank() && !color.isPlaceholder && !invalidNames.contains(name.trim())) {
-                                    onAdd(name, color)
-                                }
-                            },
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                if (invalidNames.contains(name.trim())) {
-                    Row {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = "Error",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier
-                                .padding(end = 4.dp)
-                                .height(16.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.name_already_in_use),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 0.dp, bottom = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Name") },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        isError = invalidNames.contains(name.trim()),
-                    )
-                }
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column (
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                    ) {
-                        Dropdown(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            options = colors.associateBy({ it }, { it.name }),
-                            label = stringResource(R.string.color),
-                            onValueChanged = { color = it as PixColor },
-                            selectedOption = Pair(color, color.name)
-                        )
-                    }
-//                    Column ( TODO: Implement custom color
-//                        modifier = Modifier
-//                            .fillMaxWidth(),
-//                        horizontalAlignment = Alignment.End,
-//                        verticalArrangement = Arrangement.Center,
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.AddCircle,
-//                            contentDescription = "Add Color",
-//                            tint = MaterialTheme.colorScheme.onSurface,
-//                            modifier = Modifier
-//                                .padding(top = 10.dp)
-//                                .clickable {
-
-//                                }
-//                        )
-//                    }
-                }
-            }
-        }
-    }
-}
-
-@Preview(apiLevel = 34)
-@Composable
-private fun NewCategoryDialogPreview() {
-    PixCountTheme (
-        darkTheme = true
-    ) {
-        NewCategoryDialog(
-            onDismiss = { },
-            onAdd = { _, _ -> }
-        )
-    }
-}
 
 // NewListDialog ----------------------------------------------------------------
 @Composable

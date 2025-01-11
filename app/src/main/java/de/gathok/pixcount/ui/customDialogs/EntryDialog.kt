@@ -1,7 +1,7 @@
 package de.gathok.pixcount.ui.customDialogs
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
@@ -23,7 +21,7 @@ import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedTextFieldDefaults.DecorationBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,14 +34,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.gathok.pixcount.R
-import de.gathok.pixcount.dbObjects.PixCategory
-import de.gathok.pixcount.dbObjects.PixColor
+import de.gathok.pixcount.db.PixCategory
+import de.gathok.pixcount.db.PixColor
 import de.gathok.pixcount.ui.theme.PixCountTheme
 import de.gathok.pixcount.util.Months
 import io.realm.kotlin.internal.platform.currentTime
@@ -179,6 +178,12 @@ fun EntryDialog(
                 ) {
                     OutlinedText(
                         value = formatTimestamp(dateStatePicker.selectedDateMillis!!),
+                        label = {
+                            Text(
+                                stringResource(R.string.date),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        },
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.EditCalendar,
@@ -207,37 +212,61 @@ fun EntryDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OutlinedText(
     value: String,
-    modifier: Modifier = Modifier,
-    trailingIcon: @Composable (() -> Unit)? = null,
+    label: @Composable () -> Unit = {},
+    trailingIcon: @Composable() (() -> Unit)? = null,
 ) {
-    val scrollState = rememberScrollState()
-    Surface(
-        modifier = modifier
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                shape = MaterialTheme.shapes.extraSmall
-            )
-            .padding(16.dp)
-    ) {
-        Row (
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = value,
-                modifier = Modifier.verticalScroll(scrollState)
-            )
-            if (trailingIcon != null) {
-                trailingIcon()
+    DecorationBox (
+        value = "Value",
+        innerTextField = {
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = value,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (trailingIcon != null) {
+                    trailingIcon()
+                }
             }
-        }
-
-    }
+        },
+        enabled = true,
+        singleLine = true,
+        visualTransformation = VisualTransformation.None,
+        interactionSource = remember { MutableInteractionSource() },
+        label = label,
+    )
+//        Surface(
+//            modifier = modifier
+//                .border(
+//                    1.dp,
+//                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+//                    shape = MaterialTheme.shapes.extraSmall
+//                )
+//                .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+//        ) {
+//            Row (
+//                modifier = Modifier
+//                    .fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceBetween
+//            ) {
+//                Text(
+//                    text = value,
+//                    modifier = Modifier.verticalScroll(scrollState)
+//                )
+//                if (trailingIcon != null) {
+//                    trailingIcon()
+//                }
+//            }
+//
+//        }
+//    }
 }
 
 fun formatTimestamp(timestamp: Long): String {

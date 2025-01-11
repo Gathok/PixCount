@@ -1,10 +1,10 @@
 package de.gathok.pixcount
 
 import android.app.Application
-import de.gathok.pixcount.dbObjects.PixCategory
-import de.gathok.pixcount.dbObjects.PixColor
-import de.gathok.pixcount.dbObjects.PixList
-import de.gathok.pixcount.dbObjects.PixListValues
+import de.gathok.pixcount.db.PixCategory
+import de.gathok.pixcount.db.PixColor
+import de.gathok.pixcount.db.PixList
+import de.gathok.pixcount.db.PixListValues
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 
