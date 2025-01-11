@@ -1,0 +1,39 @@
+package de.gathok.pixcount.db
+
+import androidx.compose.ui.graphics.Color
+import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.annotations.PrimaryKey
+import org.mongodb.kbson.ObjectId
+
+class PixColor(): RealmObject {
+
+    @PrimaryKey var id: ObjectId = ObjectId()
+    var name: String = ""
+    private var red: Float = 0f
+    private var green: Float = 0f
+    private var blue: Float = 0f
+    private var alpha: Float = 0f
+    var isPlaceholder: Boolean = true
+
+    constructor(name: String, color: Color, isPlaceholder: Boolean = false) : this() {
+        this.name = name
+        this.red = color.red
+        this.green = color.green
+        this.blue = color.blue
+        this.alpha = color.alpha
+        this.isPlaceholder = isPlaceholder
+    }
+
+    constructor(name: String, red: Float, green: Float, blue: Float, alpha: Float, isPlaceholder: Boolean = false) : this() {
+        this.name = name
+        this.red = red
+        this.green = green
+        this.blue = blue
+        this.alpha = alpha
+        this.isPlaceholder = isPlaceholder
+    }
+
+    fun toColor(): Color {
+        return Color(red, green, blue, alpha)
+    }
+}
