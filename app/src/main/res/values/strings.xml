@@ -29,4 +29,5 @@
     <string name="delete_list_desc">Delete the list \'%1$s\'?</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
+    <string name="manage_colors">Manage Colors</string>
 </resources>
