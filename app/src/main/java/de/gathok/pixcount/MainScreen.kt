@@ -2,7 +2,7 @@
 
 package de.gathok.pixcount
 
-import FilledBoxIcon
+import FilledPixIcon
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.widget.Toast
@@ -471,7 +471,7 @@ fun MainScreen(
                                                                         )
                                                                     } else if (!pixCategory.color!!.isPlaceholder) {
                                                                         Icon(
-                                                                            imageVector = FilledBoxIcon,
+                                                                            imageVector = FilledPixIcon,
                                                                             contentDescription = "Pix",
                                                                             tint = pixCategory.color!!.toColor(),
                                                                         )
@@ -527,7 +527,7 @@ fun MainScreen(
                                         ) {
                                             Row {
                                                 Icon(
-                                                    imageVector = FilledBoxIcon,
+                                                    imageVector = FilledPixIcon,
                                                     contentDescription = "Category Pix",
                                                     tint = color!!.toColor(),
                                                 )

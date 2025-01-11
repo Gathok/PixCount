@@ -19,10 +19,11 @@ import androidx.compose.ui.Modifier
 @Composable
 fun Dropdown(
     modifier: Modifier,
-    options: Map<Any, String>,
-    onValueChanged: (Any) -> Unit,
     label: String,
     selectedOption: Pair<Any, String>,
+    options: Map<Any, String>,
+    onValueChanged: (Any) -> Unit,
+    optionIcon: @Composable ((Any) -> Unit)? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var currentInput by remember { mutableStateOf(selectedOption.second) }
@@ -42,6 +43,8 @@ fun Dropdown(
             onValueChange = {
                 currentInput = it
             },
+            leadingIcon = if (optionIcon != null) { { optionIcon(selectedOption.first) } }
+                else null,
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
@@ -66,7 +69,9 @@ fun Dropdown(
                             expanded = false
                             currentInput = text
                             onValueChanged(option)
-                        }
+                        },
+                        leadingIcon = if (optionIcon != null) { { optionIcon(option) } }
+                            else null
                     )
                 }
             }

@@ -1,5 +1,6 @@
 package de.gathok.pixcount.ui.customDialogs
 
+import FilledPixIcon
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -160,7 +161,15 @@ fun CategoryDialog(
                     options = colors.associateBy({ it }, { it.name }),
                     label = stringResource(R.string.color),
                     onValueChanged = { color = it as PixColor },
-                    selectedOption = Pair(color, color.name)
+                    selectedOption = Pair(color, color.name),
+                    optionIcon = { color ->
+                        color as PixColor
+                        Icon(
+                            imageVector = FilledPixIcon,
+                            contentDescription = "Color",
+                            tint = color.toColor(),
+                        )
+                    }
                 )
             }
 //            Column ( TODO: Implement custom color

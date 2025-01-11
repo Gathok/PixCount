@@ -7,12 +7,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val FilledBoxIcon: ImageVector
+val FilledPixIcon: ImageVector
     get() {
-        if (_FilledBoxIcon != null) {
-            return _FilledBoxIcon!!
+        if (_FilledPixIcon != null) {
+            return _FilledPixIcon!!
         }
-        _FilledBoxIcon = ImageVector.Builder(
+        _FilledPixIcon = ImageVector.Builder(
             name = "Check_box_outline_blank",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
@@ -45,7 +45,7 @@ val FilledBoxIcon: ImageVector
                 close()
             }
         }.build()
-        return _FilledBoxIcon!!
+        return _FilledPixIcon!!
     }
 
-private var _FilledBoxIcon: ImageVector? = null
+private var _FilledPixIcon: ImageVector? = null

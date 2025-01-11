@@ -1,5 +1,6 @@
 package de.gathok.pixcount.ui.customDialogs
 
+import FilledPixIcon
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -205,7 +206,15 @@ fun EntryDialog(
                     options = categories.associateBy({ it }, { it.name }),
                     label = stringResource(R.string.category),
                     onValueChanged = { selectedCategory = it as PixCategory },
-                    selectedOption = Pair(selectedCategory, selectedCategory.name)
+                    selectedOption = Pair(selectedCategory, selectedCategory.name),
+                    optionIcon = { category ->
+                        category as PixCategory
+                        Icon(
+                            imageVector = FilledPixIcon,
+                            contentDescription = "Color",
+                            tint = category.color!!.toColor(),
+                        )
+                    }
                 )
             }
         }
@@ -217,7 +226,7 @@ fun EntryDialog(
 fun OutlinedText(
     value: String,
     label: @Composable () -> Unit = {},
-    trailingIcon: @Composable() (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     DecorationBox (
         value = "Value",
