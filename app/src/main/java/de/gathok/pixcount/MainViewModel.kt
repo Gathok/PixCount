@@ -158,7 +158,7 @@ class MainViewModel: ViewModel() {
         }
     }
 
-    fun deleteCategory(category: PixCategory, pixListId: BsonObjectId) {
+    fun deletePixCategory(category: PixCategory, pixListId: BsonObjectId) {
         var pixList: PixList? = null
         for (pList in _allPixLists.value) {
             if (pList.id == pixListId) {
@@ -170,22 +170,16 @@ class MainViewModel: ViewModel() {
             throw IllegalArgumentException("pixListId is invalid")
         }
         viewModelScope.launch {
+            pixList.deleteCategory(category)
             realm.write {
-                val managedCategory = findLatest(category)
-                    ?: throw IllegalArgumentException("category is invalid or outdated")
-                val managedPixList = findLatest(pixList)
-                    ?: throw IllegalArgumentException("pixList is invalid or outdated")
-                if (!managedPixList.categories.remove(managedCategory)) {
-                    throw IllegalArgumentException("Category does not exist")
-                }
-
+                val managedPixList = findLatest(pixList) ?: throw IllegalArgumentException("category is invalid or outdated")
                 copyToRealm(managedPixList, UpdatePolicy.ALL)
             }
         }
     }
 
     // PixEntry functions ---------------------------------------------------
-    fun createPixEntry(day: Int, month: Months, category: PixCategory?, pixListId: BsonObjectId) {
+    fun setPixEntry(day: Int, month: Months, category: PixCategory?, pixListId: BsonObjectId) {
         var pixList: PixList? = null
         for (pList in _allPixLists.value) {
             if (pList.id == pixListId) {

@@ -128,7 +128,7 @@ fun MainScreen(
             categories = state.curCategories,
             onDismiss = { showEntryDialog = false },
             onEdit = { day, month, category ->
-                viewModel.createPixEntry(day, month, category, state.curPixList!!.id)
+                viewModel.setPixEntry(day, month, category, state.curPixList!!.id)
                 showEntryDialog = false
             },
             startDate = startDate
@@ -158,7 +158,7 @@ fun MainScreen(
                 categoryToEdit = null
             },
             onDelete = {
-                viewModel.deleteCategory(
+                viewModel.deletePixCategory(
                     categoryToEdit!!,
                     state.curPixList!!.id
                 )

@@ -47,10 +47,6 @@ fun CategoryDialog(
     var name by remember { mutableStateOf(categoryToEdit?.name ?: "") }
     var color by remember { mutableStateOf(categoryToEdit?.color ?: colors.firstOrNull() ?: PixColor()) }
 
-    LaunchedEffect(isEdit) {
-        println("isEdit: $isEdit")
-    }
-
     CustomDialog(
         onDismissRequest = onDismiss,
         title = {

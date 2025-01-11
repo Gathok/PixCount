@@ -1,5 +1,6 @@
 package de.gathok.pixcount.db
 
+import de.gathok.pixcount.MyApp
 import de.gathok.pixcount.util.Months
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.EmbeddedRealmObject
@@ -71,6 +72,24 @@ class PixListValues() : EmbeddedRealmObject {
             Months.OCTOBER -> octValues[day - 1] = category
             Months.NOVEMBER -> novValues[day - 1] = category
             Months.DECEMBER -> decValues[day - 1] = category
+        }
+    }
+
+    suspend fun deleteCategory(category: PixCategory) {
+        MyApp.realm.write {
+            val emptyCategory = PixCategory()
+            val managedPixListValues = findLatest(this@PixListValues) ?: throw IllegalArgumentException("pixListValues is invalid or outdated")
+            for (list in listOf(managedPixListValues.janValues, managedPixListValues.febValues, managedPixListValues.marValues,
+                managedPixListValues.aprValues, managedPixListValues.mayValues, managedPixListValues.junValues,
+                managedPixListValues.julValues, managedPixListValues.augValues, managedPixListValues.sepValues,
+                managedPixListValues.octValues, managedPixListValues.novValues, managedPixListValues.decValues)) {
+                list.forEach {
+                    if (it.name == category.name) { // FIXME This is not a good way to compare categories, use id instead
+                        list[list.indexOf(it)] = emptyCategory
+                        println("Entry emptied")
+                    }
+                }
+            }
         }
     }
 }

@@ -96,7 +96,7 @@ fun EntryDialog(
                             showDatePickerDialog.value = false
                         }
                     ) {
-                        Text("OK")
+                        Text(stringResource(R.string.ok))
                     }
                 },
                 dismissButton = {
@@ -106,7 +106,7 @@ fun EntryDialog(
                             dateStatePicker.selectedDateMillis = oldDateValue
                         }
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 },
             ) {
@@ -122,7 +122,7 @@ fun EntryDialog(
             onDismissRequest = onDismiss,
             title = {
                 Text(
-                    stringResource(R.string.new_entry),
+                    stringResource(R.string.set_entry),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
