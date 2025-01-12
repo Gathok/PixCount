@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("io.realm.kotlin") version "1.11.0"
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -68,7 +69,13 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // Database
     implementation("io.realm.kotlin:library-base:1.11.0")
 
+    // More Icons
     implementation(libs.androidx.material.icons.extended.android)
+
+    // Navigation
+    implementation(libs.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
 }

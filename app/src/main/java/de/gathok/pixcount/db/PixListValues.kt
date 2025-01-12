@@ -78,7 +78,8 @@ class PixListValues() : EmbeddedRealmObject {
     suspend fun deleteCategory(category: PixCategory) {
         MyApp.realm.write {
             val emptyCategory = PixCategory()
-            val managedPixListValues = findLatest(this@PixListValues) ?: throw IllegalArgumentException("pixListValues is invalid or outdated")
+            val managedPixListValues = findLatest(this@PixListValues)
+                ?: throw IllegalArgumentException("pixListValues is invalid or outdated")
             for (list in listOf(managedPixListValues.janValues, managedPixListValues.febValues, managedPixListValues.marValues,
                 managedPixListValues.aprValues, managedPixListValues.mayValues, managedPixListValues.junValues,
                 managedPixListValues.julValues, managedPixListValues.augValues, managedPixListValues.sepValues,
