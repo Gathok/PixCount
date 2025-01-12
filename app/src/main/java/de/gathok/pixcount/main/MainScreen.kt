@@ -1,11 +1,7 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package de.gathok.pixcount.main
 
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.widget.ListView
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
@@ -19,10 +15,8 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.ColorLens
-import androidx.compose.material.icons.outlined.FormatColorReset
 import androidx.compose.material.icons.outlined.LibraryAdd
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,7 +60,6 @@ import de.gathok.pixcount.util.NavListScreen
 import de.gathok.pixcount.util.NavManageColorsScreen
 import de.gathok.pixcount.util.Screen
 import kotlinx.coroutines.launch
-import org.mongodb.kbson.BsonObjectId
 import org.mongodb.kbson.ObjectId
 
 @Composable

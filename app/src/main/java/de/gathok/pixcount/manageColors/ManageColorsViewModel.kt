@@ -2,7 +2,6 @@ package de.gathok.pixcount.manageColors
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import de.gathok.pixcount.MyApp
 import de.gathok.pixcount.db.PixColor
 import de.gathok.pixcount.db.PixList

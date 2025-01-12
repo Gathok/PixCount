@@ -7,7 +7,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import de.gathok.pixcount.list.ListScreen
 import de.gathok.pixcount.list.ListViewModel
-import de.gathok.pixcount.main.MainViewModel
 import de.gathok.pixcount.manageColors.ManageColorsScreen
 import de.gathok.pixcount.manageColors.ManageColorsViewModel
 import de.gathok.pixcount.util.NavListScreen

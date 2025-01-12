@@ -29,4 +29,7 @@
     <string name="delete_list_desc">Die Liste \'%1$s\' löschen?</string>
     <string name="ok">OK</string>
     <string name="cancel">Abbrechen</string>
+    <string name="manage_colors">Farben managen</string>
+    <string name="edit_color">Farbe bearbeiten</string>
+    <string name="add_color">Farbe hinzufügen</string>
 </resources>
