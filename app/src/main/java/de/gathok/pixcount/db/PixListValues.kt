@@ -87,7 +87,6 @@ class PixListValues() : EmbeddedRealmObject {
                 list.forEach {
                     if (it.name == category.name) { // FIXME This is not a good way to compare categories, use id instead
                         list[list.indexOf(it)] = emptyCategory
-                        println("Entry emptied")
                     }
                 }
             }

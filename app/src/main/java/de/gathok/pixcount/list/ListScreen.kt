@@ -27,7 +27,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +39,7 @@ import de.gathok.pixcount.db.PixCategory
 import de.gathok.pixcount.ui.CustomTopBar
 import de.gathok.pixcount.ui.customDialogs.CategoryDialog
 import de.gathok.pixcount.ui.customDialogs.EntryDialog
+import de.gathok.pixcount.ui.customDialogs.RenamePixListDialog
 import de.gathok.pixcount.util.Months
 import io.realm.kotlin.internal.platform.currentTime
 import org.mongodb.kbson.BsonObjectId
@@ -124,12 +124,34 @@ fun ListScreen(
         )
     }
 
+    var showRenameDialog by remember { mutableStateOf(false) }
+
+    if (showRenameDialog) {
+        RenamePixListDialog(
+            curName = state.curPixList?.name ?: "",
+            invalideNames = viewModel.getInvalideNames(),
+            onDismiss = { showRenameDialog = false },
+            onFinish = { newName ->
+                viewModel.updatePixListName(newName)
+                showRenameDialog = false
+            }
+        )
+    }
+
     Scaffold (
         topBar = {
             CustomTopBar(
-                title = {
-                    Text(text = stringResource(id = R.string.app_name))
-                },
+                title = { Text(
+                    text = if (state.curPixList != null) {
+                        state.curPixList!!.name
+                    } else {
+                        stringResource(R.string.app_name)
+                    },
+                    modifier = Modifier
+                        .clickable {
+                            showRenameDialog = true
+                        }
+                ) },
                 actions = {
                     IconButton(
                         onClick = {

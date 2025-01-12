@@ -71,6 +71,22 @@ class ListViewModel: ViewModel() {
         )
     }
 
+    fun getInvalideNames(): List<String> {
+        return _allPixLists.value.map { it.name }
+    }
+
+    fun updatePixListName(newName: String) {
+        viewModelScope.launch {
+            realm.write {
+                val managedPixList = findLatest(state.value.curPixList ?: throw IllegalArgumentException("curPixList is invalid or outdated"))
+                    ?: throw IllegalArgumentException("pixList is invalid or outdated")
+                managedPixList.name = newName
+
+                copyToRealm(managedPixList, UpdatePolicy.ALL)
+            }
+        }
+    }
+
     // PixCategory functions -------------------------------------------------
     fun createPixCategory(name: String, color: PixColor, pixList: PixList) {
         viewModelScope.launch {

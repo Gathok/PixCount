@@ -32,4 +32,5 @@
     <string name="manage_colors">Farben managen</string>
     <string name="edit_color">Farbe bearbeiten</string>
     <string name="add_color">Farbe hinzufügen</string>
+    <string name="rename_pixlist">PixListe umbenennen</string>
 </resources>
