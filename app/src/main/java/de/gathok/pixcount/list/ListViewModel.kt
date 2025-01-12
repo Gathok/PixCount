@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.mongodb.kbson.ObjectId
@@ -47,17 +48,22 @@ class ListViewModel: ViewModel() {
 
     private val _state = MutableStateFlow(ListState())
 
-    val state = combine(_state, _allPixLists, _colorList) { state, allPixLists, colorList ->
+    val state = combine(
+        _state, _allPixLists.onStart { emit(emptyList()) }, _colorList.onStart { emit(emptyList()) }
+    ) { state, allPixLists, colorList ->
+        val currentPixList = allPixLists.find { it.id == state.curPixListId }
         state.copy(
             colorList = colorList,
-            curPixList = allPixLists.find { it.id == state.curPixListId },
-            curCategories = allPixLists.find { it.id == state.curPixListId }?.categories?.toList() ?: emptyList(),
+            curPixList = currentPixList,
+            curCategories = currentPixList?.categories?.toList() ?: emptyList()
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ListState()
+        started = SharingStarted.WhileSubscribed(),
+        initialValue =
+            ListState()
     )
+
 
     fun setPixListId(pixListId: ObjectId?) {
         _state.value = _state.value.copy(

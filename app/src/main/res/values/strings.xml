@@ -30,4 +30,6 @@
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
     <string name="manage_colors">Manage Colors</string>
+    <string name="edit_color">Edit Color</string>
+    <string name="add_color">Add Color</string>
 </resources>

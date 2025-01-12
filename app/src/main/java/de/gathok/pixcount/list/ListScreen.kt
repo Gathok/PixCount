@@ -47,10 +47,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.gathok.pixcount.R
 import de.gathok.pixcount.db.PixCategory
+import de.gathok.pixcount.ui.CustomTopBar
 import de.gathok.pixcount.ui.customDialogs.CategoryDialog
 import de.gathok.pixcount.ui.customDialogs.EntryDialog
 import de.gathok.pixcount.util.Months
 import io.realm.kotlin.internal.platform.currentTime
+import kotlinx.coroutines.launch
 import org.mongodb.kbson.BsonObjectId
 import java.time.Instant
 import java.time.LocalDate
@@ -74,13 +76,6 @@ fun ListScreen(
         println("Loading PixList with ID: $objectId of type ${objectId?.javaClass}")
         viewModel.setPixListId(objectId)
     }
-
-//    LaunchedEffect(state.curPixList) {
-//        val objectId = curPixListId?.let { BsonObjectId(it) }
-//        if (state.curPixList?.id != objectId) {
-//            viewModel.setPixListId(objectId)
-//        }
-//    }
 
     var showEntryDialog by remember { mutableStateOf(false) }
     var entryToEdit by remember { mutableStateOf<Long?>(null) }
@@ -144,13 +139,9 @@ fun ListScreen(
 
     Scaffold (
         topBar = {
-            CenterAlignedTopAppBar(
+            CustomTopBar(
                 title = {
-                    if (state.curPixList != null) {
-                        Text(state.curPixList!!.name)
-                    } else {
-                        Text(stringResource(R.string.app_name))
-                    }
+                    Text(text = stringResource(id = R.string.app_name))
                 },
                 actions = {
                     IconButton(
@@ -177,32 +168,7 @@ fun ListScreen(
                         )
                     }
                 },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            openDrawer()
-                        }
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.onSurface,
-                        ) {
-                            Image (
-                                painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-                                contentDescription = "Menu",
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier
-                                    .scale(1.5f)
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors().copy(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                ),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 16.dp, bottomEnd = 16.dp))
+                openDrawer = openDrawer
             )
         }
     ) { pad ->
@@ -290,12 +256,20 @@ fun ListScreen(
                                                                 throw IllegalArgumentException(
                                                                     "Entries might be null"
                                                                 )
-                                                            } else if (!pixCategory.color!!.isPlaceholder) {
-                                                                Icon(
-                                                                    imageVector = FilledPixIcon,
-                                                                    contentDescription = "Pix",
-                                                                    tint = pixCategory.color!!.toColor(),
-                                                                )
+                                                            } else if (pixCategory.name != "") {
+                                                                if (pixCategory.color != null && !pixCategory.color!!.isPlaceholder) {
+                                                                    Icon(
+                                                                        imageVector = FilledPixIcon,
+                                                                        contentDescription = "Pix",
+                                                                        tint = pixCategory.color!!.toColor(),
+                                                                    )
+                                                                } else {
+                                                                    Icon(
+                                                                        imageVector = Icons.Default.CheckBoxOutlineBlank,
+                                                                        contentDescription = "Empty Pix",
+                                                                        tint = MaterialTheme.colorScheme.error
+                                                                    )
+                                                                }
                                                             } else {
                                                                 Icon(
                                                                     imageVector = Icons.Default.CheckBoxOutlineBlank,
@@ -347,11 +321,19 @@ fun ListScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Row {
-                                        Icon(
-                                            imageVector = FilledPixIcon,
-                                            contentDescription = "Category Pix",
-                                            tint = color!!.toColor(),
-                                        )
+                                        if (color != null && !color.isPlaceholder) {
+                                            Icon(
+                                                imageVector = FilledPixIcon,
+                                                contentDescription = "Category Pix",
+                                                tint = color.toColor(),
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckBoxOutlineBlank,
+                                                contentDescription = "Empty Category Pix",
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                     }
                                     Row {
                                         Text(

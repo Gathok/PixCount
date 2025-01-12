@@ -55,27 +55,6 @@ class MainViewModel: ViewModel() {
             initialValue = emptyList()
         )
 
-    init {
-        listOf(
-            PixColor(name = "Peach", Peach),
-            PixColor(name = "Lemon Yellow", LemonYellow),
-            PixColor(name = "Mint Green", MintGreen),
-            PixColor(name = "Sky Blue", SkyBlue),
-            PixColor(name = "Lavender", Lavender),
-            PixColor(name = "Dusty Pink", DustyPink),
-            PixColor(name = "Pale Orange", PaleOrange),
-            PixColor(name = "Baby Blue", BabyBlue),
-            PixColor(name = "Blush Pink", BlushPink),
-            PixColor(name = "Lilac", PastelLilac),
-        ).forEach { color ->
-            viewModelScope.launch {
-                realm.write {
-                    copyToRealm(color)
-                }
-            }
-        }
-    }
-
     private val _state = MutableStateFlow(MainState())
     val state = combine(_state, _allPixLists, _colorList) { state, allPixLists, colorList ->
         state.copy(

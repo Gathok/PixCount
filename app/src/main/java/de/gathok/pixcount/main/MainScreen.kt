@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.ColorLens
+import androidx.compose.material.icons.outlined.FormatColorReset
 import androidx.compose.material.icons.outlined.LibraryAdd
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -77,7 +78,7 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     val state by viewModel.state.collectAsState()
     val navController = rememberNavController()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
 
     val selectedScreen = remember { mutableStateOf(Screen.LIST) }
     val selectedPixListId = remember { mutableStateOf<ObjectId?>(null) }
@@ -102,7 +103,9 @@ fun MainScreen(
             onAdd = { name ->
                 val newPixList = viewModel.createPixList(name.trim())
                 showNewListDialog = false
-                viewModel.setCurPixList(newPixList)
+                selectedScreen.value = Screen.LIST
+                selectedPixListId.value = newPixList.id
+                navController.navigate(NavListScreen(newPixList.id.toHexString()))
             },
             invalidNames = state.allPixLists.map { it.name },
         )
@@ -153,14 +156,6 @@ fun MainScreen(
                 modifier = Modifier
                     .padding(top = 16.dp)
             )
-        }
-    }
-
-    LaunchedEffect(state.curPixList) {
-        if (state.curPixList == null) {
-            scope.launch {
-                 drawerState.open()
-            }
         }
     }
 

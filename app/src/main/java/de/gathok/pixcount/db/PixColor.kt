@@ -24,7 +24,7 @@ class PixColor(): RealmObject {
         this.isPlaceholder = isPlaceholder
     }
 
-    constructor(name: String, red: Float, green: Float, blue: Float, alpha: Float, isPlaceholder: Boolean = false) : this() {
+    constructor(name: String, red: Float, green: Float, blue: Float, alpha: Float = 1f, isPlaceholder: Boolean = false) : this() {
         this.name = name
         this.red = red
         this.green = green
@@ -35,5 +35,24 @@ class PixColor(): RealmObject {
 
     fun toColor(): Color {
         return Color(red, green, blue, alpha)
+    }
+
+    private fun valueToHex(value: Float): String {
+        val hex = (value * 255).toInt().toString(16)
+        return if (hex.length == 1) "0$hex" else hex
+    }
+
+    fun toHex(): String {
+        return "#${valueToHex(red)}${valueToHex(green)}${valueToHex(blue)}"
+    }
+
+    fun getRgbValues(): List<Float> {
+        return listOf(red, green, blue)
+    }
+
+    fun setRgb(newRgb: List<Float>) {
+        this.red = newRgb[0]
+        this.green = newRgb[1]
+        this.blue = newRgb[2]
     }
 }
