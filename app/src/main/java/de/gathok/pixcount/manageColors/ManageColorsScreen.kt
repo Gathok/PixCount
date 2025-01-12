@@ -163,7 +163,7 @@ fun ManageColorsScreen(
                     if (!color.isPlaceholder) {
                         ColorItem(
                             color = color,
-                            uses = state.colorUses[color] ?: 0,
+                            count = state.colorUses[color.id] ?: 0,
                             modifier = Modifier
                                 .padding(16.dp)
                                 .clickable {
@@ -182,7 +182,7 @@ fun ManageColorsScreen(
 fun ColorItem(
     color: PixColor,
     modifier: Modifier = Modifier,
-    uses: Int = 0,
+    count: Int = 0,
 ) {
     Row(
         modifier = modifier
@@ -213,7 +213,7 @@ fun ColorItem(
 //        if (uses > 0) {
             Column {
                 Text(
-                    text = "$uses",
+                    text = "$count",
                     style = MaterialTheme.typography.bodySmall
                 )
             }

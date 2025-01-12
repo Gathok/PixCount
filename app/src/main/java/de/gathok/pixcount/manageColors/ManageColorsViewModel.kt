@@ -60,9 +60,10 @@ class ManageColorsViewModel: ViewModel() {
         state.copy(
             colorList = colorList,
             allCategories = allPixLists.flatMap { it.categories },
-            colorUses = _colorList.value.associateWith { color ->
+            colorUses = _colorList.value.associate { color ->
+                color.id to
                 _allPixLists.value.sumOf { pixList ->
-                    pixList.categories.count { it.color == color }
+                    pixList.categories.count { it.color?.id == color.id }
                 }
             }
         )
@@ -96,7 +97,7 @@ class ManageColorsViewModel: ViewModel() {
         viewModelScope.launch {
             realm.write {
                 _colorList.value.forEach { color ->
-                    if (_state.value.colorUses[color] == 0 && !color.isPlaceholder) {
+                    if (state.value.colorUses[color.id] == 0 && !color.isPlaceholder) {
                         val managedColor = findLatest(color)
                             ?: throw IllegalArgumentException("color is invalid or outdated")
                         delete(managedColor)
