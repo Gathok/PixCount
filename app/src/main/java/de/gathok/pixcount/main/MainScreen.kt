@@ -1,9 +1,18 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package de.gathok.pixcount.main
 
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +44,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -45,6 +55,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.navigation.compose.rememberNavController
 import de.gathok.pixcount.R
 import de.gathok.pixcount.db.PixList
@@ -62,6 +73,7 @@ import de.gathok.pixcount.util.Screen
 import kotlinx.coroutines.launch
 import org.mongodb.kbson.ObjectId
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
@@ -151,6 +163,8 @@ fun MainScreen(
         }
     }
 
+    var showHiddenLists by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -159,45 +173,62 @@ fun MainScreen(
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val SHOW_HIDDEN_LISTS = stringResource(R.string.hidden_lists_shown)
+                    val HIDE_HIDDEN_LISTS = stringResource(R.string.hidden_lists_hidden)
+                    NavListHeader ( onLongClick = {
+                        showHiddenLists = !showHiddenLists
+                        Toast.makeText(
+                            context,
+                            if (showHiddenLists) SHOW_HIDDEN_LISTS else HIDE_HIDDEN_LISTS,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        // Vibrate
+                        (getSystemService(context, Vibrator::class.java) as Vibrator)
+                            .vibrate(VibrationEffect
+                                .createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+                    } )
+                    Spacer(modifier = Modifier.height(12.dp))
                     state.allPixLists.forEach { curPixList ->
-                        NavigationDrawerItem(
-                            label = { Text(curPixList.name) },
-                            selected = curPixList.id == selectedPixListId.value,
-                            onClick = {
-                                navController.navigate(NavListScreen(curPixList.id.toHexString()))
-                                selectedPixListId.value = curPixList.id
-                                selectedScreen.value = Screen.LIST
-                                scope.launch {
-                                    drawerState.close()
-                                }
-                            },
-                            modifier = Modifier
-                                .padding(NavigationDrawerItemDefaults.ItemPadding),
-                            icon = {
-                                Icon(
-                                    imageVector = if (curPixList.id == selectedPixListId.value) {
-                                        FilledPixListIcon
-                                    } else {
-                                        OutlinedPixListIcon
-                                    },
-                                    contentDescription = "PixList"
-                                )
-                            },
-                            badge = {
-                                IconButton(
-                                    onClick = {
-                                        listToDelete = curPixList
-                                        showDeleteListDialog = true
+                        if (!(curPixList.name.matches(Regex("^\\(.*\\)$")) && !showHiddenLists)) {
+                            NavigationDrawerItem(
+                                label = { Text(curPixList.name) },
+                                selected = curPixList.id == selectedPixListId.value,
+                                onClick = {
+                                    navController.navigate(NavListScreen(curPixList.id.toHexString()))
+                                    selectedPixListId.value = curPixList.id
+                                    selectedScreen.value = Screen.LIST
+                                    scope.launch {
+                                        drawerState.close()
                                     }
-                                ) {
+                                },
+                                modifier = Modifier
+                                    .padding(NavigationDrawerItemDefaults.ItemPadding),
+                                icon = {
                                     Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete PixList"
+                                        imageVector = if (curPixList.id == selectedPixListId.value) {
+                                            FilledPixListIcon
+                                        } else {
+                                            OutlinedPixListIcon
+                                        },
+                                        contentDescription = "PixList"
                                     )
+                                },
+                                badge = {
+                                    IconButton(
+                                        onClick = {
+                                            listToDelete = curPixList
+                                            showDeleteListDialog = true
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete PixList"
+                                        )
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                     NavigationDrawerItem(
                         label = { Text(stringResource(R.string.new_pixlist)) },
@@ -268,6 +299,49 @@ fun MainScreen(
     }
 }
 
+@Composable
+fun NavListHeader(
+    onLongClick: () -> Unit,
+) {
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .combinedClickable(
+                onClick = { },
+                onLongClick = onLongClick
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = de.gathok.pixcount.ui.theme.Surface,
+                modifier = Modifier
+                    .height(42.dp)
+            ) {
+                Image (
+                    painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                    contentDescription = "Menu",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .scale(1.5f),
+                )
+            }
+        }
+        Column {
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            )
+        }
+
+    }
+}
+
 @Preview
 @Composable
 private fun Preview() {
@@ -291,14 +365,13 @@ private fun Preview() {
     }
 }
 
-//@Preview
-//@Composable
-//private fun MainScreenPreview() {
-//    PixCountTheme (
-//        darkTheme = true
-//    ) {
-//        MainScreen(
-//            viewModel = MainViewModel()
-//        )
-//    }
-//}
+@OptIn(ExperimentalFoundationApi::class)
+@Preview
+@Composable
+private fun MainScreenPreview() {
+    PixCountTheme (
+        darkTheme = true
+    ) {
+        
+    }
+}

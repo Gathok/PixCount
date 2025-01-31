@@ -33,4 +33,6 @@
     <string name="edit_color">Edit Color</string>
     <string name="add_color">Add Color</string>
     <string name="rename_pixlist">Rename PixList</string>
+    <string name="hidden_lists_shown">Hidden lists shown</string>
+    <string name="hidden_lists_hidden">Hidden lists hidden</string>
 </resources>

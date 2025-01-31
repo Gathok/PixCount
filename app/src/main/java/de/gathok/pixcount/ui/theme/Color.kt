@@ -2,13 +2,8 @@ package de.gathok.pixcount.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// #121318
+val Surface = Color(red = 0.07f, green = 0.07f, blue = 0.09f, alpha = 1.0f)
 
 val Peach = Color(red = 1.0f, green = 0.87f, blue = 0.77f, alpha = 1.0f)
 val LemonYellow = Color(red = 1.0f, green = 0.97f, blue = 0.69f, alpha = 1.0f)
