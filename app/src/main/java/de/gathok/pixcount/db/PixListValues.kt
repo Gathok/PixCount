@@ -85,7 +85,7 @@ class PixListValues() : EmbeddedRealmObject {
                 managedPixListValues.julValues, managedPixListValues.augValues, managedPixListValues.sepValues,
                 managedPixListValues.octValues, managedPixListValues.novValues, managedPixListValues.decValues)) {
                 list.forEach {
-                    if (it.name == category.name) { // FIXME This is not a good way to compare categories, use id instead
+                    if (it.id == category.id) {
                         list[list.indexOf(it)] = emptyCategory
                     }
                 }
