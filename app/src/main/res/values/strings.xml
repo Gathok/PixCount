@@ -35,4 +35,5 @@
     <string name="rename_pixlist">Rename PixList</string>
     <string name="hidden_lists_shown">Hidden lists shown</string>
     <string name="hidden_lists_hidden">Hidden lists hidden</string>
+    <string name="loading">Loading...</string>
 </resources>

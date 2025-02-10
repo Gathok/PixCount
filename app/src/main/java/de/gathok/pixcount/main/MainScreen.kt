@@ -67,13 +67,13 @@ import de.gathok.pixcount.ui.customDialogs.NewListDialog
 import de.gathok.pixcount.ui.customIcons.FilledPixListIcon
 import de.gathok.pixcount.ui.customIcons.OutlinedPixListIcon
 import de.gathok.pixcount.ui.theme.PixCountTheme
+import de.gathok.pixcount.util.LoadingScreen
 import de.gathok.pixcount.util.NavListScreen
 import de.gathok.pixcount.util.NavManageColorsScreen
 import de.gathok.pixcount.util.Screen
 import kotlinx.coroutines.launch
 import org.mongodb.kbson.ObjectId
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
@@ -195,11 +195,12 @@ fun MainScreen(
                                 label = { Text(curPixList.name) },
                                 selected = curPixList.id == selectedPixListId.value,
                                 onClick = {
-                                    navController.navigate(NavListScreen(curPixList.id.toHexString()))
                                     selectedPixListId.value = curPixList.id
                                     selectedScreen.value = Screen.LIST
                                     scope.launch {
+                                        navController.navigate(LoadingScreen)
                                         drawerState.close()
+                                        navController.navigate(NavListScreen(curPixList.id.toHexString()))
                                     }
                                 },
                                 modifier = Modifier
@@ -365,10 +366,9 @@ private fun Preview() {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
-private fun MainScreenPreview() {
+fun MainScreenPreview() {
     PixCountTheme (
         darkTheme = true
     ) {

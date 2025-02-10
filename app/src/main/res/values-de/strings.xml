@@ -35,4 +35,5 @@
     <string name="rename_pixlist">PixListe umbenennen</string>
     <string name="hidden_lists_shown">Versteckte Listen eingeblendet</string>
     <string name="hidden_lists_hidden">Versteckte Listen ausgeblendet</string>
+    <string name="loading">Laden...</string>
 </resources>

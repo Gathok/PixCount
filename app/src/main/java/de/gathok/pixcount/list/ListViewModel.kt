@@ -9,9 +9,11 @@ import de.gathok.pixcount.db.PixList
 import de.gathok.pixcount.util.Months
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -28,9 +30,10 @@ class ListViewModel: ViewModel() {
         .map { results ->
             results.list.toList()
         }
+        .flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.WhileSubscribed(),
             initialValue = realm.query<PixList>().find().toList()
         )
 
@@ -40,6 +43,7 @@ class ListViewModel: ViewModel() {
         .map { results ->
             results.list.toList()
         }
+        .flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

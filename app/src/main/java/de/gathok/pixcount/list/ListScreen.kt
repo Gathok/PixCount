@@ -64,10 +64,20 @@ fun ListScreen(
     val context = LocalContext.current
     val state by viewModel.state.collectAsState()
 
+    var loading by remember { mutableStateOf(true) }
+
     LaunchedEffect(curPixListId) {
-        val objectId = curPixListId?.let { BsonObjectId(it) }
-        println("Loading PixList with ID: $objectId of type ${objectId?.javaClass}")
-        viewModel.setPixListId(objectId)
+        if (curPixListId != null) {
+            viewModel.setPixListId(BsonObjectId(curPixListId))
+        } else {
+            loading = true
+        }
+    }
+
+    LaunchedEffect(state.curPixList) {
+        if (state.curPixList != null) {
+            loading = false
+        }
     }
 
     var showEntryDialog by remember { mutableStateOf(false) }
@@ -148,17 +158,13 @@ fun ListScreen(
         topBar = {
             CustomTopBar(
                 title = {
-                    Text(
-                        text = if (state.curPixList != null) {
-                            state.curPixList!!.name
-                        } else {
-                            stringResource(R.string.app_name)
-                        },
-                        modifier = Modifier
-                            .clickable {
-                                showRenameDialog = true
-                            }
-                    )
+                    if (state.curPixList != null) {
+                        Text(
+                            text = state.curPixList!!.name,
+                            modifier = Modifier
+                                .clickable { showRenameDialog = true }
+                        )
+                    }
                 },
                 actions = {
                     IconButton(
@@ -177,7 +183,7 @@ fun ListScreen(
                         Icon(
                             imageVector = Icons.Default.AddCircleOutline,
                             contentDescription = "Add Entry",
-                            tint = if (state.curPixList != null && state.curCategories.isNotEmpty()) {
+                            tint = if (state.curPixList != null && state.curCategories.isNotEmpty() && !loading) {
                                 MaterialTheme.colorScheme.onSurface
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
@@ -194,7 +200,16 @@ fun ListScreen(
                 .padding(pad)
                 .padding(start = 8.dp, end = 4.dp, bottom = 16.dp)
         ) {
-            if (state.curPixList != null) {
+            if (loading) {
+                Column (
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(stringResource(R.string.loading))
+                }
+            }
+            else if (state.curPixList != null) {
                 Row {
                     Column (
                         modifier = Modifier.weight(0.8f)
@@ -313,7 +328,7 @@ fun ListScreen(
                             }
                         }
                     }
-                    // Right-hand side: Reorderable list for categories (drag area) with the Add Category button below.
+                    // Right-hand side: reorderable list for categories (drag area) with the Add Category button below.
                     Column(
                         modifier = Modifier
                             .weight(0.2f)
@@ -404,7 +419,8 @@ fun ListScreen(
                         }
                     }
                 }
-            } else {
+            }
+            else {
                 Column (
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
