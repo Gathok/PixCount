@@ -102,7 +102,7 @@ fun ListScreen(
             },
             startDate = startDate
                 ?: (currentTime().epochSeconds * 1000 + currentTime().nanosecondsOfSecond / 1_000_000),
-            curCategory = curEntryCategory ?: state.curCategories.first()
+            curCategory = curCategory ?: state.curCategories.first()
         )
     }
 
@@ -284,7 +284,7 @@ fun ListScreen(
                                                                 }
                                                             }
                                                         ) {
-                                                            if (pixCategory == null) { // TODO: This is just a placeholder
+                                                            if (pixCategory == null) {
                                                                 throw IllegalArgumentException(
                                                                     "Entries might be null"
                                                                 )
