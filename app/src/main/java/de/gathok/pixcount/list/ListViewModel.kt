@@ -60,10 +60,8 @@ class ListViewModel: ViewModel() {
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
-        initialValue =
-            ListState()
+        initialValue = ListState()
     )
-
 
     fun setPixListId(pixListId: ObjectId?) {
         _state.value = _state.value.copy(
@@ -147,6 +145,23 @@ class ListViewModel: ViewModel() {
                     ?: throw IllegalArgumentException("pixList is invalid or outdated")
                 managedPixList.entries?.setEntry(day, month, managedCategory)
 
+                copyToRealm(managedPixList, UpdatePolicy.ALL)
+            }
+        }
+    }
+
+    // New: Update category order after a drag and drop operation.
+    fun updateCategoryOrder(newOrder: List<PixCategory>, pixList: PixList) {
+        viewModelScope.launch {
+            realm.write {
+                val managedPixList = findLatest(pixList)
+                    ?: throw IllegalArgumentException("pixList is invalid or outdated")
+                managedPixList.categories.clear()
+                newOrder.forEach { category ->
+                    val managedCategory = findLatest(category)
+                        ?: throw IllegalArgumentException("category is invalid or outdated")
+                    managedPixList.categories.add(managedCategory)
+                }
                 copyToRealm(managedPixList, UpdatePolicy.ALL)
             }
         }

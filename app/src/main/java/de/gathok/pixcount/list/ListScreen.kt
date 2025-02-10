@@ -2,6 +2,7 @@ package de.gathok.pixcount.list
 
 import FilledPixIcon
 import android.widget.Toast
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +44,10 @@ import de.gathok.pixcount.ui.customDialogs.EntryDialog
 import de.gathok.pixcount.ui.customDialogs.RenamePixListDialog
 import de.gathok.pixcount.util.Months
 import io.realm.kotlin.internal.platform.currentTime
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
 import org.mongodb.kbson.BsonObjectId
 import java.time.Instant
 import java.time.LocalDate
@@ -86,7 +92,7 @@ fun ListScreen(
             },
             startDate = startDate
                 ?: (currentTime().epochSeconds * 1000 + currentTime().nanosecondsOfSecond / 1_000_000),
-            curCategory = curCategory ?: state.curCategories.first()
+            curCategory = curEntryCategory ?: state.curCategories.first()
         )
     }
 
@@ -141,17 +147,19 @@ fun ListScreen(
     Scaffold (
         topBar = {
             CustomTopBar(
-                title = { Text(
-                    text = if (state.curPixList != null) {
-                        state.curPixList!!.name
-                    } else {
-                        stringResource(R.string.app_name)
-                    },
-                    modifier = Modifier
-                        .clickable {
-                            showRenameDialog = true
-                        }
-                ) },
+                title = {
+                    Text(
+                        text = if (state.curPixList != null) {
+                            state.curPixList!!.name
+                        } else {
+                            stringResource(R.string.app_name)
+                        },
+                        modifier = Modifier
+                            .clickable {
+                                showRenameDialog = true
+                            }
+                    )
+                },
                 actions = {
                     IconButton(
                         onClick = {
@@ -298,78 +306,100 @@ fun ListScreen(
                                                 modifier = Modifier
                                                     .weight(1f / 32f),
                                             ) {
-
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-
                     }
-                    LazyColumn (
+                    // Right-hand side: Reorderable list for categories (drag area) with the Add Category button below.
+                    Column(
                         modifier = Modifier
                             .weight(0.2f)
                             .padding(start = 4.dp, top = 8.dp)
-                            .fillMaxSize(),
+                            .fillMaxSize()
                     ) {
-                        items(state.curCategories) { curCategory ->
-                            Row (
-                                modifier = Modifier
-                                    .clickable {
-                                        categoryToEdit = curCategory
-                                        showCategoryDialog = true
-                                    }
-                                    .fillMaxWidth(),
-                            ) {
-                                val color = curCategory.color
-                                Column (
-                                    modifier = Modifier
-                                        .padding(bottom = 4.dp)
-                                        .fillMaxWidth(),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Row {
-                                        if (color != null && !color.isPlaceholder) {
-                                            Icon(
-                                                imageVector = FilledPixIcon,
-                                                contentDescription = "Category Pix",
-                                                tint = color.toColor(),
-                                            )
-                                        } else {
-                                            Icon(
-                                                imageVector = Icons.Default.CheckBoxOutlineBlank,
-                                                contentDescription = "Empty Category Pix",
-                                                tint = MaterialTheme.colorScheme.error
-                                            )
+                        var localCategories by remember { mutableStateOf(state.curCategories) }
+                        LaunchedEffect(state.curCategories) {
+                            localCategories = state.curCategories
+                        }
+                        val reorderState = rememberReorderableLazyListState(
+                            onMove = { from, to ->
+                                localCategories = localCategories.toMutableList().apply {
+                                    add(to.index, removeAt(from.index))
+                                }
+                                viewModel.updateCategoryOrder(localCategories, state.curPixList!!)
+                            }
+                        )
+                        LazyColumn(
+                            state = reorderState.listState,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .reorderable(reorderState)
+                        ) {
+                            items(localCategories, key = { it.id.toHexString() }) { curCategory ->
+                                ReorderableItem(reorderState, key = curCategory.id.toHexString()) { isDragging ->
+                                    val elevation by animateDpAsState(if (isDragging) 16.dp else 0.dp)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .shadow(elevation)
+                                            .detectReorderAfterLongPress(reorderState)
+                                            .clickable {
+                                                categoryToEdit = curCategory
+                                                showCategoryDialog = true
+                                            },
+                                    ) {
+                                        val color = curCategory.color
+                                        Column(
+                                            modifier = Modifier
+                                                .padding(bottom = 4.dp)
+                                                .fillMaxWidth(),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Row {
+                                                if (color != null && !color.isPlaceholder) {
+                                                    Icon(
+                                                        imageVector = FilledPixIcon,
+                                                        contentDescription = "Category Pix",
+                                                        tint = color.toColor(),
+                                                    )
+                                                } else {
+                                                    Icon(
+                                                        imageVector = Icons.Default.CheckBoxOutlineBlank,
+                                                        contentDescription = "Empty Category Pix",
+                                                        tint = MaterialTheme.colorScheme.error
+                                                    )
+                                                }
+                                            }
+                                            Row {
+                                                Text(
+                                                    text = curCategory.name,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    textAlign = TextAlign.Center,
+                                                )
+                                            }
                                         }
-                                    }
-                                    Row {
-                                        Text(
-                                            text = curCategory.name,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            textAlign = TextAlign.Center,
-                                        )
                                     }
                                 }
                             }
                         }
-                        item {
-                            Row (
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        showCategoryDialog = true
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.AddBox,
-                                        contentDescription = "Add Category"
-                                    )
+                        // "Add Category" button placed outside of the reorderable list
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    showCategoryDialog = true
                                 }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AddBox,
+                                    contentDescription = "Add Category"
+                                )
                             }
                         }
                     }
@@ -396,7 +426,7 @@ fun getDateAsLong(
     ).year
 ): Long {
     return LocalDate.of(year, month, day)
-        .atStartOfDay(ZoneOffset.UTC) // Start of day in the system's default timezone
+        .atStartOfDay(ZoneOffset.UTC)
         .toInstant()
         .toEpochMilli()
 }

@@ -13,8 +13,8 @@ android {
         applicationId = "de.gathok.pixcount"
         minSdk = 31
         targetSdk = 34
-        versionCode = 3412016
-        versionName = "alpha-0.1-pre6"
+        versionCode = 3412017
+        versionName = "alpha-0.1-pre7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -70,7 +70,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // Database
-    implementation("io.realm.kotlin:library-base:1.11.0")
+    implementation(libs.library.base)
 
     // More Icons
     implementation(libs.androidx.material.icons.extended.android)
@@ -78,4 +78,7 @@ dependencies {
     // Navigation
     implementation(libs.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+
+    // Drag and Drop reorderable library (BurnoutCrew)
+    implementation(libs.reorderable)
 }
