@@ -13,8 +13,8 @@ android {
         applicationId = "de.gathok.pixcount"
         minSdk = 31
         targetSdk = 34
-        versionCode = 3412017
-        versionName = "alpha-0.1-pre7"
+        versionCode = 3412019
+        versionName = "alpha-0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
