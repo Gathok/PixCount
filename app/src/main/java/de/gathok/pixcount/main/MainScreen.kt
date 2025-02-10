@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -173,10 +175,10 @@ fun MainScreen(
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet {
-                    Spacer(modifier = Modifier.height(8.dp))
                     val SHOW_HIDDEN_LISTS = stringResource(R.string.hidden_lists_shown)
                     val HIDE_HIDDEN_LISTS = stringResource(R.string.hidden_lists_hidden)
-                    NavListHeader ( onLongClick = {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    NavListHeader(onLongClick = {
                         showHiddenLists = !showHiddenLists
                         Toast.makeText(
                             context,
@@ -185,71 +187,79 @@ fun MainScreen(
                         ).show()
                         // Vibrate
                         (getSystemService(context, Vibrator::class.java) as Vibrator)
-                            .vibrate(VibrationEffect
-                                .createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
-                    } )
+                            .vibrate(
+                                VibrationEffect
+                                    .createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)
+                            )
+                    })
                     Spacer(modifier = Modifier.height(12.dp))
-                    state.allPixLists.forEach { curPixList ->
-                        if (!(curPixList.name.matches(Regex("^\\(.*\\)$")) && !showHiddenLists)) {
+                    LazyColumn (
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        items(state.allPixLists) { curPixList ->
+                            if (!(curPixList.name.matches(Regex("^\\(.*\\)$")) && !showHiddenLists)) {
+                                NavigationDrawerItem(
+                                    label = { Text(curPixList.name) },
+                                    selected = curPixList.id == selectedPixListId.value,
+                                    onClick = {
+                                        selectedPixListId.value = curPixList.id
+                                        selectedScreen.value = Screen.LIST
+                                        scope.launch {
+                                            navController.navigate(LoadingScreen)
+                                            drawerState.close()
+                                            navController.navigate(NavListScreen(curPixList.id.toHexString()))
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .padding(NavigationDrawerItemDefaults.ItemPadding),
+                                    icon = {
+                                        Icon(
+                                            imageVector = if (curPixList.id == selectedPixListId.value) {
+                                                FilledPixListIcon
+                                            } else {
+                                                OutlinedPixListIcon
+                                            },
+                                            contentDescription = "PixList"
+                                        )
+                                    },
+                                    badge = {
+                                        IconButton(
+                                            onClick = {
+                                                listToDelete = curPixList
+                                                showDeleteListDialog = true
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Delete PixList"
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                        item {
                             NavigationDrawerItem(
-                                label = { Text(curPixList.name) },
-                                selected = curPixList.id == selectedPixListId.value,
+                                label = { Text(stringResource(R.string.new_pixlist)) },
                                 onClick = {
-                                    selectedPixListId.value = curPixList.id
-                                    selectedScreen.value = Screen.LIST
+                                    showNewListDialog = true
                                     scope.launch {
-                                        navController.navigate(LoadingScreen)
                                         drawerState.close()
-                                        navController.navigate(NavListScreen(curPixList.id.toHexString()))
                                     }
                                 },
+                                selected = false,
                                 modifier = Modifier
                                     .padding(NavigationDrawerItemDefaults.ItemPadding),
                                 icon = {
                                     Icon(
-                                        imageVector = if (curPixList.id == selectedPixListId.value) {
-                                            FilledPixListIcon
-                                        } else {
-                                            OutlinedPixListIcon
-                                        },
-                                        contentDescription = "PixList"
+                                        imageVector = Icons.Outlined.LibraryAdd,
+                                        contentDescription = "Add PixList"
                                     )
-                                },
-                                badge = {
-                                    IconButton(
-                                        onClick = {
-                                            listToDelete = curPixList
-                                            showDeleteListDialog = true
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Delete PixList"
-                                        )
-                                    }
                                 }
                             )
                         }
                     }
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.new_pixlist)) },
-                        onClick = {
-                            showNewListDialog = true
-                            scope.launch {
-                                drawerState.close()
-                            }
-                        },
-                        selected = false,
-                        modifier = Modifier
-                            .padding(NavigationDrawerItemDefaults.ItemPadding),
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.LibraryAdd,
-                                contentDescription = "Add PixList"
-                            )
-                        }
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
                     NavigationDrawerItem(
                         label = { Text(stringResource(R.string.manage_colors)) },
                         onClick = {

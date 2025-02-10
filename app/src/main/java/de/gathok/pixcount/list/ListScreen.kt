@@ -345,12 +345,15 @@ fun ListScreen(
                                     add(to.index, removeAt(from.index))
                                 }
                                 viewModel.updateCategoryOrder(localCategories, state.curPixList!!)
+                            },
+                            canDragOver = {
+                                (it.index < localCategories.size)
                             }
                         )
                         LazyColumn(
                             state = reorderState.listState,
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxSize()
                                 .reorderable(reorderState)
                         ) {
                             items(localCategories, key = { it.id.toHexString() }) { curCategory ->
@@ -400,21 +403,23 @@ fun ListScreen(
                                     }
                                 }
                             }
-                        }
-                        // "Add Category" button placed outside of the reorderable list
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    showCategoryDialog = true
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.Top,
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            showCategoryDialog = true
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.AddBox,
+                                            contentDescription = "Add Category"
+                                        )
+                                    }
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.AddBox,
-                                    contentDescription = "Add Category"
-                                )
                             }
                         }
                     }
