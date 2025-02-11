@@ -111,7 +111,11 @@ fun MainScreen(
                 showNewListDialog = false
                 selectedScreen.value = Screen.LIST
                 selectedPixListId.value = newPixList.id
-                navController.navigate(NavListScreen(newPixList.id.toHexString()))
+                navController.navigate(LoadingScreen)
+                scope.launch {
+                    drawerState.close()
+                    navController.navigate(NavListScreen(newPixList.id.toHexString()))
+                }
             },
             invalidNames = state.allPixLists.map { it.name },
         )
@@ -227,6 +231,8 @@ fun MainScreen(
                                         IconButton(
                                             onClick = {
                                                 listToDelete = curPixList
+                                                selectedPixListId.value = null
+                                                selectedScreen.value = Screen.LIST
                                                 showDeleteListDialog = true
                                             }
                                         ) {
@@ -244,9 +250,7 @@ fun MainScreen(
                                 label = { Text(stringResource(R.string.new_pixlist)) },
                                 onClick = {
                                     showNewListDialog = true
-                                    scope.launch {
-                                        drawerState.close()
-                                    }
+                                    selectedPixListId.value = null
                                 },
                                 selected = false,
                                 modifier = Modifier
