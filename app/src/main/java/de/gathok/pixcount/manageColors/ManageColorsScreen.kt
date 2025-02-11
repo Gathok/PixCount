@@ -1,6 +1,7 @@
 package de.gathok.pixcount.manageColors
 
 import FilledPixIcon
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -44,6 +45,10 @@ fun ManageColorsScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    BackHandler {
+        viewModel.undo()
+    }
+
     var showColorDialog by remember { mutableStateOf(false) }
     var colorToEdit by remember { mutableStateOf<PixColor?>(null) }
 
@@ -57,12 +62,12 @@ fun ManageColorsScreen(
                 if (isEdit) {
                     viewModel.updateColor(colorToEdit!!, newName, newRgb)
                 } else {
-                    viewModel.addColor(PixColor(
+                    viewModel.addColor(
                         name = newName!!,
                         red = newRgb!![0],
                         green = newRgb[1],
                         blue = newRgb[2]
-                    ))
+                    )
                 }
                 showColorDialog = false
                 colorToEdit = null

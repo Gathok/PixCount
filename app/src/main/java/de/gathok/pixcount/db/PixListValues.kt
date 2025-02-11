@@ -75,21 +75,27 @@ class PixListValues() : EmbeddedRealmObject {
         }
     }
 
-    suspend fun deleteCategory(category: PixCategory) {
+    suspend fun deleteCategory(category: PixCategory) : List<Pair<Months, Int>> {
+        val removedEntries: MutableList<Pair<Months, Int>> = mutableListOf()
         MyApp.realm.write {
             val emptyCategory = PixCategory()
             val managedPixListValues = findLatest(this@PixListValues)
                 ?: throw IllegalArgumentException("pixListValues is invalid or outdated")
-            for (list in listOf(managedPixListValues.janValues, managedPixListValues.febValues, managedPixListValues.marValues,
+            val lists = listOf(managedPixListValues.janValues, managedPixListValues.febValues, managedPixListValues.marValues,
                 managedPixListValues.aprValues, managedPixListValues.mayValues, managedPixListValues.junValues,
                 managedPixListValues.julValues, managedPixListValues.augValues, managedPixListValues.sepValues,
-                managedPixListValues.octValues, managedPixListValues.novValues, managedPixListValues.decValues)) {
+                managedPixListValues.octValues, managedPixListValues.novValues, managedPixListValues.decValues)
+            for (i in lists.indices) {
+                val list = lists[i]
                 list.forEach {
                     if (it.id == category.id) {
-                        list[list.indexOf(it)] = emptyCategory
+                        val day = list.indexOf(it) + 1
+                        list[day - 1] = emptyCategory
+                        removedEntries += Pair(Months.getByIndex(i+1), day)
                     }
                 }
             }
         }
+        return removedEntries
     }
 }

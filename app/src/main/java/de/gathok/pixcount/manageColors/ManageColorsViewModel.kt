@@ -3,8 +3,10 @@ package de.gathok.pixcount.manageColors
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.gathok.pixcount.MyApp
+import de.gathok.pixcount.db.PixCategory
 import de.gathok.pixcount.db.PixColor
 import de.gathok.pixcount.db.PixList
+import de.gathok.pixcount.manageColors.util.ManageColorsUndoActions
 import de.gathok.pixcount.ui.theme.BabyBlue
 import de.gathok.pixcount.ui.theme.BlushPink
 import de.gathok.pixcount.ui.theme.DustyPink
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.mongodb.kbson.ObjectId
 
 class ManageColorsViewModel: ViewModel() {
 
@@ -71,6 +74,7 @@ class ManageColorsViewModel: ViewModel() {
 
     fun loadDefaultColors() {
         val invalideNames = _colorList.value.map { it.name }
+        val loadedColors: MutableList<PixColor> = mutableListOf()
         listOf(
             PixColor(name = "Peach", Peach),
             PixColor(name = "Lemon Yellow", LemonYellow),
@@ -84,6 +88,7 @@ class ManageColorsViewModel: ViewModel() {
             PixColor(name = "Lilac", PastelLilac),
         ).forEach { color ->
             if (color.name !in invalideNames) {
+                loadedColors += color
                 viewModelScope.launch {
                     realm.write {
                         copyToRealm(color)
@@ -91,27 +96,43 @@ class ManageColorsViewModel: ViewModel() {
                 }
             }
         }
+        addToStack(
+            ManageColorsUndoActions.UNDO_LOAD_DEFAULT_COLORS,
+            listOf(loadedColors)
+        )
     }
 
     fun deleteUnusedColors() {
+        val deletedColors: MutableList<PixColor> = mutableListOf()
         viewModelScope.launch {
             realm.write {
                 _colorList.value.forEach { color ->
                     if (state.value.colorUses[color.id] == 0 && !color.isPlaceholder) {
                         val managedColor = findLatest(color)
                             ?: throw IllegalArgumentException("color is invalid or outdated")
+                        deletedColors += managedColor
                         delete(managedColor)
                     }
                 }
             }
         }
+        addToStack(
+             ManageColorsUndoActions.UNDO_DELETE_UNUSED_COLORS,
+            listOf(deletedColors)
+        )
     }
 
     // Color DB operations
-    fun addColor(color: PixColor) {
+    fun addColor(name: String, red: Float, green: Float, blue: Float, alpha: Float = 1f) {
         viewModelScope.launch {
             realm.write {
-                copyToRealm(color)
+                val addedColor = copyToRealm(
+                    PixColor(name = name, red = red, green = green, blue = blue, alpha = alpha)
+                )
+                addToStack(
+                    ManageColorsUndoActions.UNDO_ADD_COLOR,
+                    listOf(addedColor)
+                )
             }
         }
     }
@@ -121,6 +142,10 @@ class ManageColorsViewModel: ViewModel() {
             realm.write {
                 val managedColor = findLatest(colorToEdit)
                     ?: throw IllegalArgumentException("color is invalid or outdated")
+                addToStack(
+                    ManageColorsUndoActions.UPDATE_COLOR,
+                    listOf(managedColor, managedColor.name, managedColor.getRgbValues())
+                )
                 if (newName != null) {
                     managedColor.name = newName
                 }
@@ -135,18 +160,107 @@ class ManageColorsViewModel: ViewModel() {
     fun deleteColor(color: PixColor) {
         viewModelScope.launch {
             realm.write {
+                val placeholderColor = PixColor()
                 val managedColor = findLatest(color)
                     ?: throw IllegalArgumentException("color is invalid or outdated")
+
+                val removedColorUses: MutableList<ObjectId> = mutableListOf()
                 for (pixList in _allPixLists.value) {
                     pixList.categories.forEach { category ->
-                        if (category.color == managedColor) {
+                        if (category.color?.id == managedColor.id) {
                             val managedCategory = findLatest(category)
                                 ?: throw IllegalArgumentException("category is invalid or outdated")
-                            managedCategory.color = PixColor()
+                            removedColorUses += managedCategory.id
+                            managedCategory.color = placeholderColor
                         }
                     }
                 }
                 delete(managedColor)
+
+                addToStack(
+                    ManageColorsUndoActions.UNDO_DELETE_COLOR,
+                    listOf(
+                        color.id,
+                        color.name,
+                        color.getRgbValues(),
+                        removedColorUses
+                    )
+                )
+            }
+        }
+
+    }
+    
+    // Undo operations ---------------------------------------------------------
+    private fun addToStack(action: ManageColorsUndoActions, params: List<Any>) {
+        _state.value.undoStack.add(action to params)
+    }
+
+    private fun undoLoadDefaultColors(colors: List<PixColor>) {
+        colors.forEach { color ->
+            deleteColor(color)
+        }
+    }
+
+    private fun undoDeleteUnusedColors(colors: List<PixColor>) {
+        colors.forEach { color ->
+            addColor(
+                color.name,
+                color.getRgbValues()[0],
+                color.getRgbValues()[1],
+                color.getRgbValues()[2]
+            )
+        }
+    }
+
+    private fun undoDeleteColor(id: ObjectId, name: String, rgbValues: List<Float>, categoryIds: List<ObjectId>) {
+        viewModelScope.launch {
+            realm.write {
+                val managedColor = copyToRealm(PixColor(
+                    id = id, name = name, red = rgbValues[0], green = rgbValues[1], blue = rgbValues[2]
+                ))
+                val managedCategories = categoryIds.map {
+                    findLatest(realm.query<PixCategory>().find().find { it.id in categoryIds }
+                            ?: throw IllegalArgumentException("category id is invalid or outdated"))
+                        ?: throw IllegalArgumentException("category is invalid or outdated")}
+
+                managedCategories.forEach { category ->
+                    category.color = managedColor
+                    copyToRealm(category)
+                }
+            }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun undo() {
+        if (_state.value.undoStack.isEmpty()) return
+        _state.value.undoStack.pop().let { (action, params) ->
+            when (action) {
+                ManageColorsUndoActions.UNDO_LOAD_DEFAULT_COLORS ->
+                    undoLoadDefaultColors(params[0] as List<PixColor>)
+
+                ManageColorsUndoActions.UNDO_DELETE_UNUSED_COLORS ->
+                    undoDeleteUnusedColors(params[0] as List<PixColor>)
+
+                ManageColorsUndoActions.UNDO_ADD_COLOR ->
+                    deleteColor(params[0] as PixColor)
+
+                ManageColorsUndoActions.UPDATE_COLOR -> {
+                    updateColor(
+                        params[0] as PixColor,
+                        params[1] as String,
+                        params[2] as List<Float>
+                    )
+                }
+                ManageColorsUndoActions.UNDO_DELETE_COLOR -> {
+                    undoDeleteColor(
+                        params[0] as ObjectId,
+                        params[1] as String,
+                        params[2] as List<Float>,
+                        params[3] as List<ObjectId>,
+                    )
+                }
             }
         }
     }

@@ -2,6 +2,7 @@ package de.gathok.pixcount.list
 
 import FilledPixIcon
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +79,10 @@ fun ListScreen(
         if (state.curPixList != null) {
             loading = false
         }
+    }
+
+    BackHandler {
+        viewModel.undoLastAction()
     }
 
     var showEntryDialog by remember { mutableStateOf(false) }
@@ -160,7 +165,7 @@ fun ListScreen(
                 title = {
                     if (state.curPixList != null) {
                         Text(
-                            text = state.curPixList!!.name,
+                            text = state.curPixList?.name ?: "",
                             modifier = Modifier
                                 .clickable { showRenameDialog = true }
                         )
@@ -200,7 +205,7 @@ fun ListScreen(
                 .padding(pad)
                 .padding(start = 8.dp, end = 4.dp, bottom = 16.dp)
         ) {
-            if (loading) {
+            if (loading && curPixListId != null) {
                 Column (
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,

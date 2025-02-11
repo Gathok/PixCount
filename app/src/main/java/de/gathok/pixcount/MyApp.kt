@@ -30,6 +30,7 @@ class MyApp : Application() {
             .schemaVersion(3)
             .migration ({ migrationContext: AutomaticSchemaMigration.MigrationContext ->
                 if (migrationContext.oldRealm.schemaVersion() < 2L) {
+                    // Added id field to PixCategory
                     migrationContext.enumerate(
                         "PixCategory"
                     ) { oldObj, newObj ->
@@ -38,7 +39,7 @@ class MyApp : Application() {
                             migrationContext.newRealm.findLatest(oldColor)
                                 ?: throw IllegalArgumentException("Migration failed: PixCategory.color contains invalid or outdated color")
                         } else {
-                            PixColor("null",0f,0f,0f,0f,true)
+                            PixColor()
                         }
                         newObj?.set("id", ObjectId())
                         newObj?.set("name", oldObj.getValue("name", String::class))
@@ -46,6 +47,7 @@ class MyApp : Application() {
                     }
                 }
                 if (migrationContext.oldRealm.schemaVersion() < 3L) {
+                    // Changed PixList.categories from set to list
                     migrationContext.enumerate(
                         "PixList"
                     ) { oldObj, newObj ->
