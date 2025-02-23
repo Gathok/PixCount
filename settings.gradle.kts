@@ -20,5 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "PixCount"
-include(":app")
+include(":androidApp")
  
