@@ -1,7 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("io.realm.kotlin") version "1.11.0"
+    alias(libs.plugins.compose.compiler)
+    id("io.realm.kotlin") version "3.0.0"
     alias(libs.plugins.kotlin.serialization)
 }
 
